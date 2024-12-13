@@ -1,0 +1,13 @@
+{
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "files.associations": {
+    ".prettierrc": "json"
+  },
+  "prettier.printWidth": 300,
+  "explorer.fileNesting.patterns": {
+    "package.json": ".eslint*, prettier*, tsconfig*, vite*, yarn*, package-lock.*, pnpm-*",
+    "tailwind.config.ts": "tailwind.config*, postcss.config*, .prettier*, vercel.*, components.json, eslint.*",
+    ".env.local": ".env*",
+    ".env": ".env*"
+  }
+}

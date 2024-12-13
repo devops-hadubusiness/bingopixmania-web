@@ -1,0 +1,24 @@
+@media (max-width: 1279px) {
+  .semicircle::before {
+  }
+}
+
+@media (min-width: 1280px) {
+  .semicircle::before {
+    position: absolute;
+    content: '';
+    /* top: -7.5px; */
+    /* left: 0; */
+    right: -100px;
+    background-color: #FFF !important;
+    /* background-color: #e5e7eb !important; */
+    z-index: 10;
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    background: inherit;
+    transform: translateX(-50%) translateY(50%);
+    /* bottom: 0px; */
+    bottom: 100px;
+  }
+}
