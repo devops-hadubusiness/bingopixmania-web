@@ -110,7 +110,7 @@ export default function CampaignsPage() {
             {item.status === campaign_status.WAITING ? (
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button variant="default" onClick={() => _handleUpdateCampaignStatus(item.ref, "start")} className="size-8 p-0 bg-primary/30 text-primary dark:text-white hover:bg-primary/30 hover:brightness-125">
+                  <Button variant="default" onClick={() => _handleUpdateCampaignStatus(item.ref, "start")} className="size-8 p-0 bg-primary/30 text-primary-text dark:text-white hover:bg-primary/30 hover:brightness-125">
                     <span className="sr-only">Iniciar</span>
                     <Play className="size-4" />
                   </Button>

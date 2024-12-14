@@ -1,10 +1,13 @@
-import { ComponentType } from "react";
+// packages
+import { ComponentType, ForwardRefExoticComponent, RefAttributes } from "react";
 import { IconType } from "react-icons";
+import { LucideProps } from "lucide-react";
 
 export type RouteProps = {
   name: string;
   path?: string;
-  icon?: IconType;
+  group?: string;
+  icon?: ForwardRefExoticComponent<Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>> | IconType;
   description?: string;
   children?: Array<RouteProps>;
   category?: "page" | "tool" | "service";
@@ -13,6 +16,8 @@ export type RouteProps = {
     className?: string;
   };
   component?: ComponentType;
+  highlight?: boolean
+  button?: boolean
   disabled?: () => boolean;
   allowed?: () => boolean;
   showOnHome?: () => boolean;

@@ -72,7 +72,7 @@ export function SessionCard({ session, hideActions, onSelected, shotsCount, hand
       {!hideActions && [session_status.PENDING, session_status.INACTIVE].includes(session.status) && (
         <div className="col-span-6 pl-4 pr-2">
           <Button
-            className="rounded-lg size-8 bg-primary/30 dark:text-white text-primary hover:brightness-125 hover:bg-primary hover:bg-primary/30 w-full gap-x-2"
+            className="rounded-lg size-8 bg-primary/30 dark:text-white text-primary-text hover:brightness-125 hover:bg-primary hover:bg-primary/30 w-full gap-x-2"
             onClick={() => [session_status.PENDING, session_status.INACTIVE].includes(session.status) && onSelected(session, session_status.ACTIVE)}
             disabled={![session_status.PENDING, session_status.INACTIVE].includes(session.status)}
           >

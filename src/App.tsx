@@ -16,7 +16,8 @@ import { AuthProvider } from "@/auth/auth-provider";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/toaster";
 import Topbar from "@/components/layout/topbar";
-import SideDrawer from "@/components/layout/side-drawer";
+import { SidebarProvider } from "@/components/ui/sidebar";
+import { AppSidebar } from "@/components/layout/app-sidebar";
 
 // pages
 import NotFound from "@/pages/NotFound";
@@ -30,10 +31,10 @@ function Main({ children }: { children: Readonly<ReactNode> }) {
 
   return (
     <>
-      <Topbar />
-      <SideDrawer />
+      <AppSidebar />
 
       <div className="pl-12 pr-14 py-12 dark:bg-gray-850 bg-gray-100" style={containerStyle}>
+        <Topbar />
         {children}
       </div>
     </>
@@ -60,8 +61,10 @@ export default function AppWrapper() {
           <TooltipProvider>
             <AuthProvider>
               <AuthGuard>
-                <Toaster />
-                <App />
+                <SidebarProvider>
+                  <Toaster />
+                  <App />
+                </SidebarProvider>
               </AuthGuard>
             </AuthProvider>
           </TooltipProvider>

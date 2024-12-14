@@ -1,7 +1,7 @@
 // packages
 import { createContext, useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
-import { useMediaQuery } from "@mui/material";
+import { useMediaQuery } from "@/hooks/use-media-query";
 
 // types
 type ContainerStyleProps = { width: string; marginLeft: string; minHeight: string };
@@ -23,8 +23,8 @@ const StoreContext = createContext<IStoreContext>({
   isDrawerOpen: false,
   setIsDrawerOpen: () => false,
   containerStyle: {
-    width: "calc(100% - 56px)",
-    marginLeft: "56px",
+    width: "calc(100% - 220px)",
+    marginLeft: "220px",
     minHeight: "calc(100vh - 75px)",
   },
 });

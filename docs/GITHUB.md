@@ -1,7 +1,7 @@
 # Branches Workflow:
 1. stable release branch: *master*
 2. stable homologation branch: *dev*
-3. development branches: *developer/prefix_from_below_list:feature*
+3. development branches: *developer/prefix_from_below_list/feature*
 
 
 ### Branches Prefixes List:
