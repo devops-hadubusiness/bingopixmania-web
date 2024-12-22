@@ -2,6 +2,7 @@
 import React, { useEffect, useState, useContext, Fragment } from "react";
 import { CircleUserRound, LogOut } from "lucide-react";
 import { useMediaQuery } from "@/hooks/use-media-query";
+import { useNavigate } from "react-router-dom";
 
 // components
 import { Menubar, MenubarContent, MenubarItem, MenubarMenu, MenubarTrigger } from "@/components/ui/menubar";
@@ -27,6 +28,7 @@ type BreadcrumbItemProps = { name: string; path: string };
 export default function Topbar(): JSX.Element {
   const { activeRoute } = useContext(StoreContext);
   const { user, logout } = useStore();
+  const navigate = useNavigate();
   const [breadcrumb, setBreadcrumb] = useState<BreadcrumbItemProps[]>([]);
   const isMobile = useMediaQuery("(max-width:767px)");
 
@@ -56,7 +58,7 @@ export default function Topbar(): JSX.Element {
   }, [activeRoute]);
 
   return (
-    <Menubar className={`border-t-0 border-x-0 border-b-1 border-border rounded-none h-[75px] flex align-center justify-between px-12 shadow-soft bg-background dark:bg-gray-900 fixed top-0 ${isMobile ? "!w-full left-0" : "!w-[calc(100%_-_220px)] left-[220px]"}`}>
+    <Menubar className={`border-t-0 border-x-0 border-b-1 border-border rounded-none h-[75px] flex align-center justify-between px-12 shadow-soft bg-background dark:bg-gray-900 fixed top-0 z-[100] ${isMobile ? "!w-full left-0" : "!w-[calc(100%_-_220px)] left-[220px]"}`}>
       {isMobile && <SidebarTrigger />}
 
       <div className="flex">
@@ -75,12 +77,16 @@ export default function Topbar(): JSX.Element {
       </div>
 
       <div className="smAndDown:hidden flex items-center justify-center h-full gap-2">
+        <Button variant="default" className="bg-success hover:bg-success hover:brightness-125 flex items-center gap-2" onClick={() => navigate(activeRoute === "/home" ? "/depositar" : "/home")}>
+          {activeRoute === "/home" ? "Depositar" : "Jogo ao Vivo"}
+        </Button>
+
         {routes
           .filter((r) => r.showOnTopbar && r.showOnTopbar())
           .map((r, i) => (
             <Fragment key={i}>
               {r.button ? (
-                <Button variant="default" className="bg-success hover:bg-success hover:brightness-125 animate-bounce flex items-center gap-2" disabled={r.disabled && r.disabled()}>
+                <Button variant="default" className="bg-success hover:bg-success hover:brightness-125 flex items-center gap-2" disabled={r.disabled && r.disabled()}>
                   {r.name}
                   {r.icon ? <r.icon className="size-5" color={r.icon.color} /> : null}
                 </Button>
@@ -103,7 +109,7 @@ export default function Topbar(): JSX.Element {
           ))}
       </div>
 
-      <div className="flex h-full space-x-2">
+      {/* <div className="flex h-full space-x-2">
         <div className="flex flex-col align-center justify-center text-end">
           <span className="text-xs text-foreground">Bem-vindo</span>
           <span className="text-sm text-primary-text">{user?.name}</span>
@@ -123,7 +129,7 @@ export default function Topbar(): JSX.Element {
             </MenubarItem>
           </MenubarContent>
         </MenubarMenu>
-      </div>
+      </div> */}
     </Menubar>
   );
 }
