@@ -16,7 +16,9 @@ import { AuthProvider } from "@/auth/auth-provider";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/toaster";
 import Topbar from "@/components/layout/topbar";
-import SideDrawer from "@/components/layout/side-drawer";
+import { SidebarProvider } from "@/components/ui/sidebar";
+import { AppSidebar } from "@/components/layout/app-sidebar";
+import { Avatar, AvatarImage } from "@/components/ui/avatar";
 
 // pages
 import NotFound from "@/pages/NotFound";
@@ -28,14 +30,25 @@ import { StoreContext, StoreProvider } from "@/contexts/StoreContext";
 function Main({ children }: { children: Readonly<ReactNode> }) {
   const { containerStyle } = useContext(StoreContext);
 
+  function _openWhatsApp() {
+    const phoneNumber = "+554195690272";
+    const message = "Olá! Eu gostaria de suporte do Bingo PIX Mania.";
+    const url = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
+    window.open(url, "_blank");
+  }
+
   return (
     <>
-      <Topbar />
-      <SideDrawer />
+      <AppSidebar />
 
-      <div className="pl-12 pr-14 py-12 dark:bg-gray-850 bg-gray-100" style={containerStyle}>
+      <div className="smAndDown:pl-12 mdAndUp:pl-[268px] pr-14 py-12 dark:bg-gray-850 bg-gray-100" style={containerStyle}>
+        <Topbar />
         {children}
       </div>
+
+      <Avatar className="size-16 p-1 fixed bottom-8 right-4 hover:cursor-pointer" onClick={_openWhatsApp}>
+        <AvatarImage src="/images/misc/wpp.svg" />
+      </Avatar>
     </>
   );
 }
@@ -60,8 +73,10 @@ export default function AppWrapper() {
           <TooltipProvider>
             <AuthProvider>
               <AuthGuard>
-                <Toaster />
-                <App />
+                <SidebarProvider>
+                  <Toaster />
+                  <App />
+                </SidebarProvider>
               </AuthGuard>
             </AuthProvider>
           </TooltipProvider>

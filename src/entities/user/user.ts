@@ -54,7 +54,7 @@ export type LoginSchema = z.infer<typeof loginSchema>
 
 // schemas
 export const loginSchema = z.object({
-  email: z.string({ message: 'Informe o e-mail.' }).min(1, 'E-mail inválido.').max(100, 'Limite de caracteres: 100.'),
+  cpf: z.string({ message: 'Informe o cpf.' }).min(1, 'CPF inválido.').max(14, 'Limite de caracteres: 14.'),
   password: z.string({ message: 'Informe a senha.' }).min(1, 'Senha inválida.').max(255, 'Limite de caracteres: 255.')
 })
 

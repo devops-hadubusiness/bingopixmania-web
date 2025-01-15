@@ -1,7 +1,7 @@
 // package
 import React, { useContext } from "react";
 import { ChevronLeft } from "lucide-react";
-import { useMediaQuery } from "@mui/material";
+import { useMediaQuery } from "@/hooks/use-media-query";
 
 // components
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";

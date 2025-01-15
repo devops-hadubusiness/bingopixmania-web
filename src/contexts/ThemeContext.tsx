@@ -16,12 +16,12 @@ type ThemeContextProps = {
 
 // context
 const ThemeContext = createContext<IThemeContext>({
-  theme: (localStorage.getItem("theme") as ThemeProps) || "light",
+  theme: (localStorage.getItem("theme") as ThemeProps) || "dark",
   toggleTheme: () => {},
 });
 
 const ThemeProvider = ({ children }: ThemeContextProps) => {
-  const [theme, setTheme] = useState<ThemeProps>((localStorage.getItem("theme") as ThemeProps) || "light");
+  const [theme, setTheme] = useState<ThemeProps>(/* (localStorage.getItem("theme") as ThemeProps) ||  */"dark");
 
   useEffect(() => {
     _defineTheme(theme)

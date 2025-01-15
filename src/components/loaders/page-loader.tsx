@@ -3,7 +3,8 @@ import "@/styles/components/loaders/page-loader.css";
 
 export default function PageLoader() {
   return (
-    <main className="p-24 min-h-screen w-full bg-zinc-800 bg-center bg-no-repeat flex flex-col align-center justify-center text-center bg-pattern">
+    // <main className="p-24 min-h-screen w-full bg-zinc-800 bg-center bg-no-repeat flex flex-col align-center justify-center text-center bg-pattern">
+    <main className="p-24 min-h-screen w-full flex flex-col align-center justify-center text-center bg-primary">
       <div className="flex flex-col m-auto items-center justify-center text-zinc-200">
         <div className="loader">
           <span className="bar"></span>
