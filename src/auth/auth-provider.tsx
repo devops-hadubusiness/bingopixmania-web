@@ -8,13 +8,12 @@ import { useStore } from "@/store/store";
 
 // dtos
 import { UserProps, user_role } from "@/entities/user/user";
-import { CompanyProps } from "@/entities/company/company";
 
 // interfaces
 interface AuthContextProps {
   user: UserProps | null;
   loading: boolean;
-  login: (user: UserProps, token: string, company: { companyId: number, company: CompanyProps }) => void;
+  login: (user: UserProps, token: string) => void;
   logout: () => void;
   isAuthenticated: boolean;
 }
@@ -22,20 +21,20 @@ interface AuthContextProps {
 const AuthContext = createContext<AuthContextProps | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-  const { user, logout, updateCompany, updateUser } = useStore();
-  const [cookies, setCookie] = useCookies(["user", "token", "company"]);
+  const { user, logout, updateUser } = useStore();
+  const [cookies, setCookie] = useCookies(["user", "token"]);
   const navigate = useNavigate();
-  const [isAuthenticated, setIsAuthenticated] = useState(!!(cookies.user && cookies.token && cookies.company));
+  const [isAuthenticated, setIsAuthenticated] = useState(!!(cookies.user && cookies.token));
   const [isLoading, setIsLoading] = useState(true);
 
   const initializeAuth = async () => {
-    const authenticated = !!(cookies.user && cookies.token && cookies.company);
+    const authenticated = !!(cookies.user && cookies.token);
     if (isAuthenticated != authenticated) setIsAuthenticated(authenticated);
   };
 
   useEffect(() => {
     if (!isAuthenticated && !["/400", "/401", "/403", "/404", "/500", "/login", "/nao-autorizado"].includes(location.pathname)) {
-      logout();
+      // logout(); // TODO: descomentar
       return;
     } else if (!isAuthenticated && ["/400", "/401", "/403", "/404", "/500", "/login", "/nao-autorizado"].includes(location.pathname)) return;
     else if (isAuthenticated) {
@@ -51,15 +50,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setIsLoading(false);
   }, []);
 
-  const login = async (user: UserProps, token: string, company: { companyId: number, company: CompanyProps }) => {
+  const login = async (user: UserProps, token: string) => {
     setIsLoading(true);
     setCookie("user", user, { path: "/", maxAge: 86400 });
-    setCookie("company", { ...company }, { path: "/", maxAge: 86400 });
     setCookie("token", token, { path: "/", maxAge: 86400, sameSite: "lax" });
     updateUser(user);
-    updateCompany(company.company);
     setIsLoading(false);
-    navigate("/sessoes");
+    navigate("/home");
   };
 
   return (

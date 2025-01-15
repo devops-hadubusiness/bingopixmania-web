@@ -60,7 +60,7 @@ export function CustomDataTable<T>({ data, columns, children, className, tableCl
         {!hideFilterInput && (
           <div className="relative group smAndDown:w-full">
             <Input placeholder="Filtrar..." value={globalFilter} onChange={(event) => setGlobalFilter(event.target.value)} className="smAndDown:w-full placeholder:text-sm placeholder:text-muted-foreground pl-10" />
-            <Search className="absolute top-[calc(50%_-_8px)] left-4 size-4 text-muted-foreground group-focus-within:text-primary" />
+            <Search className="absolute top-[calc(50%_-_8px)] left-4 size-4 text-muted-foreground group-focus-within:text-primary-text" />
           </div>
         )}
       </div>

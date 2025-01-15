@@ -23,7 +23,7 @@ import { api } from "@/lib/axios";
 import { HTTP_STATUS_CODE } from "@/constants/http";
 
 // entities
-import { loginSchema, LoginSchema } from "@/entities/user/user";
+import { loginSchema, LoginSchema, user_role } from "@/entities/user/user";
 
 export function LoginForm() {
   const { login, isAuthenticated } = useAuth();
@@ -35,7 +35,7 @@ export function LoginForm() {
   const form = useForm<LoginSchema>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      email: process.env.NODE_ENV === "development" ? "teste@teste.com" : "",
+      cpf: process.env.NODE_ENV === "development" ? "000.000.000-00" : "",
       password: process.env.NODE_ENV === "development" ? "teste" : "",
     },
   });
@@ -43,6 +43,11 @@ export function LoginForm() {
   async function _auth() {
     try {
       setIsLoading(true);
+
+      // TODO: trocar
+      login({ name: "Gustavo", role: user_role.ADMIN }, "");
+      return
+
       const body = { ...form.getValues(), action: "login" };
       const response = await api.post(`/auth`, body);
       if (response.data?.statusCode === HTTP_STATUS_CODE.OK) {
@@ -71,7 +76,7 @@ export function LoginForm() {
   }
 
   useEffect(() => {
-    if (isAuthenticated) navigate("/sessoes");
+    if (isAuthenticated) navigate("/home");
   }, [isAuthenticated]);
 
   return (
@@ -79,13 +84,13 @@ export function LoginForm() {
       <form onSubmit={form.handleSubmit(_auth)} className="w-full disabled:cursor-not-allowed flex flex-col gap-6">
         <FormField
           control={form.control}
-          name={"email"}
+          name={"cpf"}
           render={({ field }) => (
             <FormItem className="flex flex-col gap-2">
-              <FormLabel className="text-sm text-gray-200">E-mail</FormLabel>
+              <FormLabel className="text-sm">CPF</FormLabel>
 
               <FormControl>
-                <Input {...field} disabled={isLoading} className="rounded-sm border border-solid border-gray-700 bg-gray-900 text-gray-100 text-base placeholder:text-gray-400 transition-colors h-[48px]" placeholder="Seu e-mail" />
+                <Input {...field} disabled={isLoading} className="rounded-sm border border-solid border-gray-700 bg-gray-900 text-gray-100 text-base placeholder:text-gray-400 transition-colors h-[48px]" placeholder="Seu CPF" />
               </FormControl>
 
               <FormMessage />
@@ -98,15 +103,15 @@ export function LoginForm() {
           name={"password"}
           render={({ field }) => (
             <FormItem className="flex flex-col gap-2">
-              <FormLabel className="text-sm text-gray-200">Senha</FormLabel>
+              <FormLabel className="text-sm">Senha</FormLabel>
 
               <FormControl>
                 <div className="relative group">
                   <Input {...field} disabled={isLoading} type={isShowingPassword ? "text" : "password"} className="rounded-sm border border-solid border-gray-700 bg-gray-900 text-gray-100 text-base placeholder:text-gray-400 transition-colors h-[48px]" placeholder="Sua senha" />
                   {isShowingPassword ? (
-                    <EyeOff className="absolute top-[calc(50%_-_12px)] right-4 size-6 text-gray-500 group-focus-within:text-primary hover:cursor-pointer" onClick={() => setIsShowingPassword(false)} />
+                    <EyeOff className="absolute top-[calc(50%_-_12px)] right-4 size-6 text-gray-500 group-focus-within:text-primary-text hover:cursor-pointer" onClick={() => setIsShowingPassword(false)} />
                   ) : (
-                    <Eye className="absolute top-[calc(50%_-_12px)] right-4 size-6 text-gray-500 group-focus-within:text-primary hover:cursor-pointer" onClick={() => setIsShowingPassword(true)} />
+                    <Eye className="absolute top-[calc(50%_-_12px)] right-4 size-6 text-gray-500 group-focus-within:text-primary-text hover:cursor-pointer" onClick={() => setIsShowingPassword(true)} />
                   )}
                 </div>
               </FormControl>
