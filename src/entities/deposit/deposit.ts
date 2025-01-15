@@ -40,8 +40,8 @@ export type CreateDepositSchema = z.infer<typeof createDepositSchema>;
 // schemas
 export const createDepositSchema = z.object({
   userRef: z.string().uuid("Referência de usuário inválida."),
-  value: z.number().min(0, "Valor de depósito inválido."),
-  bonusValue: z.number().min(0, "Valor de bônus inválido.").optional(),
+  value: z.coerce.number().min(0, "Valor de depósito inválido."),
+  bonusValue: z.coerce.number().min(0, "Valor de bônus inválido.").optional(),
 });
 
 export class Deposit {

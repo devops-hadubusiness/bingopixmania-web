@@ -1,192 +1,229 @@
 // packages
-import { z } from "zod";
+import { z } from 'zod'
 
 // entities
-import { Game } from "../game/game";
-import { Ticket } from "../ticket/ticket";
-import { Winner } from "../winner/winner";
-import { Deposit } from "../deposit/deposit";
-import { Withdrawal } from "../withdrawal/withdrawal";
+import { Game } from '../game/game'
+import { Ticket } from '../ticket/ticket'
+import { Winner } from '../winner/winner'
+import { Deposit } from '../deposit/deposit'
+import { Withdrawal } from '../withdrawal/withdrawal'
 
 // enums
 export enum user_role {
-  ADMIN = "ADMIN",
-  MODERATOR = "MODERATOR",
-  CUSTOMER = "CUSTOMER",
+  ADMIN = 'ADMIN',
+  MODERATOR = 'MODERATOR',
+  CUSTOMER = 'CUSTOMER'
 }
 
 export enum formatted_user_role {
-  ADMIN = "Administrador",
-  MODERATOR = "Moderador",
-  CUSTOMER = "Cliente",
+  ADMIN = 'Administrador',
+  MODERATOR = 'Moderador',
+  CUSTOMER = 'Cliente'
 }
 
 export enum user_status {
-  ALLOWED = "ALLOWED",
-  BLOCKED = "BLOCKED",
-  DELETED = "DELETED",
+  ALLOWED = 'ALLOWED',
+  BLOCKED = 'BLOCKED',
+  DELETED = 'DELETED'
 }
 
 export enum formatted_user_status {
-  ALLOWED = "Permitido",
-  BLOCKED = "Bloqueado",
-  DELETED = "Deletado",
+  ALLOWED = 'Permitido',
+  BLOCKED = 'Bloqueado',
+  DELETED = 'Deletado'
 }
 
 export enum user_affiliation_status {
-  REGISTERED = "REGISTERED",
-  FINISHED = "FINISHED",
+  REGISTERED = 'REGISTERED',
+  FINISHED = 'FINISHED'
 }
 
 export enum formatted_user_affiliation_status {
-  REGISTERED = "Registrado",
-  FINISHED = "Finalizado",
+  REGISTERED = 'Registrado',
+  FINISHED = 'Finalizado'
 }
 
 // types
 export type UserProps = {
-  id: number;
-  ref: string;
-  userId?: number;
-  name: string;
-  cpf: string;
-  email: string;
-  password: string;
-  phone?: string;
-  birthDate?: Date | string;
-  balance: number;
-  src?: string;
-  ip: string;
-  role: user_role;
-  status: user_status;
-  affiliationStatus?: user_affiliation_status;
-  createdAt: Date;
-  updatedAt?: Date;
+  id: number
+  ref: string
+  userId?: number
+  name: string
+  cpf: string
+  email: string
+  password: string
+  phone?: string
+  birthDate?: Date | string
+  balance: number
+  src?: string
+  ip: string
+  role: user_role
+  status: user_status
+  affiliationStatus?: user_affiliation_status
+  createdAt: Date
+  updatedAt?: Date
 
   // relationships
-  parent?: User;
-  affiliateds: User[];
-  games: Game[];
-  tickets: Ticket[];
-  wins: Winner[];
-  deposits: Deposit[];
-  withdrawals: Withdrawal[];
-};
+  parent?: User
+  affiliateds: User[]
+  games: Game[]
+  tickets: Ticket[]
+  wins: Winner[]
+  deposits: Deposit[]
+  withdrawals: Withdrawal[]
+}
 
-export type LoginSchema = z.infer<typeof loginSchema>;
+export type LoginSchema = z.infer<typeof loginSchema>
+export type CreateUserSchema = z.infer<typeof createUserSchema>
 
 // schemas
 export const loginSchema = z.object({
   cpf: z
     .string()
-    .min(1, "CPF inválido.")
-    .max(14, "Limite de caracteres: 14.")
+    .min(1, 'CPF inválido.')
+    .max(14, 'Limite de caracteres: 14.')
     .regex(/^\d{3}\.\d{3}\.\d{3}-\d{2}$/, {
-      message: "Formato inválido de CPF.",
+      message: 'Formato inválido de CPF.'
     }),
-  password: z.string({ message: "Informe a senha." }).min(1, "Senha inválida.").max(255, "Limite de caracteres: 255."),
-});
+  password: z.string({ message: 'Informe a senha.' }).min(1, 'Senha inválida.').max(255, 'Limite de caracteres: 255.')
+})
+
+export const createUserSchema = z
+  .object({
+    userRef: z.string().uuid('Referência de usuário inválida.').optional(),
+    name: z.string().min(1, 'Nome inválido.').max(100, 'Limite de caracteres: 100.'),
+    cpf: z
+      .string()
+      .min(14, 'CPF inválido.')
+      .max(14, 'Limite de caracteres: 14.')
+      .regex(/^\d{3}\.\d{3}\.\d{3}-\d{2}$/, { message: 'Formato inválido de CPF.' }),
+    email: z
+      .string()
+      .min(5, 'E-mail inválido.')
+      .max(50, 'Limite de caracteres: 50.')
+      .regex(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/, { message: 'E-mail inválido.' }),
+    password: z.string().min(4, 'Senha inválida.').max(255, 'Limite de caracteres: 255.'),
+    passwordConfirm: z
+      .string()
+      .min(4, 'Senha inválida.')
+      .max(255, 'Limite de caracteres: 255.')
+      .refine((passwordConfirm: string) => !!passwordConfirm?.trim(), { message: 'Confirmação de senha inválida.' }),
+    phone: z
+      .string()
+      .min(17, 'Telefone inválido.')
+      .max(17, 'Limite de caracteres: 17.')
+      .regex(/^\(\d{2}\) \d{5} - \d{4}$/, { message: 'Telefone inválido.' })
+      .optional(),
+    birthDate: z
+      .string()
+      .min(10, 'Data de nascimento inválida.')
+      .max(10, 'Limite de caracteres: 10.')
+      .regex(/^\d{2}\/\d{2}\/\d{4}$/, { message: 'Data de nascimento inválida.' })
+      .optional(),
+    src: z.string().optional()
+  })
+  .refine(data => data.password?.trim() === data.passwordConfirm?.trim(), { message: 'As senhas devem ser iguais.' })
 
 export class User {
-  private props: UserProps;
+  private props: UserProps
 
   get id() {
-    return this.props.id;
+    return this.props.id
   }
 
   get ref() {
-    return this.props.ref;
+    return this.props.ref
   }
 
   get userId() {
-    return this.props.userId;
+    return this.props.userId
   }
 
   get name() {
-    return this.props.name;
+    return this.props.name
   }
 
   get cpf() {
-    return this.props.cpf;
+    return this.props.cpf
   }
 
   get email() {
-    return this.props.email;
+    return this.props.email
   }
 
   get password() {
-    return this.props.password;
+    return this.props.password
   }
 
   get phone() {
-    return this.props.phone;
+    return this.props.phone
   }
 
   get birthDate() {
-    return this.props.birthDate;
+    return this.props.birthDate
   }
 
   get balance() {
-    return this.props.balance;
+    return this.props.balance
   }
 
   get src() {
-    return this.props.src;
+    return this.props.src
   }
 
   get ip() {
-    return this.props.ip;
+    return this.props.ip
   }
 
   get role() {
-    return this.props.role;
+    return this.props.role
   }
 
   get status() {
-    return this.props.status;
+    return this.props.status
   }
 
   get affiliationStatus() {
-    return this.props.affiliationStatus;
+    return this.props.affiliationStatus
   }
 
   get createdAt() {
-    return this.props.createdAt;
+    return this.props.createdAt
   }
 
   get updatedAt() {
-    return this.props.updatedAt;
+    return this.props.updatedAt
   }
 
   get parent() {
-    return this.props.parent;
+    return this.props.parent
   }
 
   get affiliateds() {
-    return this.props.affiliateds;
+    return this.props.affiliateds
   }
 
   get games() {
-    return this.props.games;
+    return this.props.games
   }
 
   get tickets() {
-    return this.props.tickets;
+    return this.props.tickets
   }
 
   get wins() {
-    return this.props.wins;
+    return this.props.wins
   }
 
   get deposits() {
-    return this.props.deposits;
+    return this.props.deposits
   }
 
   get withdrawals() {
-    return this.props.withdrawals;
+    return this.props.withdrawals
   }
 
   constructor(props: UserProps) {
-    this.props = props;
+    this.props = props
   }
 }

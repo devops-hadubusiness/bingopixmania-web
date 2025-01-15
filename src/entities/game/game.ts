@@ -59,10 +59,10 @@ export const createGameSchema = z.object({
   userRef: z.string().uuid("Referência de usuário inválida."),
   dateTime: z.date(),
   type: z.nativeEnum(game_type, { message: "Tipo de jogo inválido." }),
-  minTicketPrice: z.number().min(0, "Preço mínimo de cartela inválido."),
-  firstPrizeValue: z.number().min(0, "Valor de primeiro prêmio inválido."),
-  secondPrizeValue: z.number().min(0, "Valor de segundo prêmio inválido."),
-  thirdPrizeValue: z.number().min(0, "Valor de terceiro prêmio inválido."),
+  minTicketPrice: z.coerce.number().min(0, "Preço mínimo de cartela inválido."),
+  firstPrizeValue: z.coerce.number().min(0, "Valor de primeiro prêmio inválido."),
+  secondPrizeValue: z.coerce.number().min(0, "Valor de segundo prêmio inválido."),
+  thirdPrizeValue: z.coerce.number().min(0, "Valor de terceiro prêmio inválido."),
   grantedPrizes: z.boolean(),
 });
 

@@ -8,7 +8,7 @@ import { Avatar } from "@/components/ui/avatar";
 
 // utils
 import { timeZone } from "@/utils/dates-util";
-import { formatToPrice } from "@/utils/strings-util";
+import { formatBRL } from '@/utils/currencies-util'
 
 export default function ReceiptsPage() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -62,8 +62,7 @@ export default function ReceiptsPage() {
                 <Avatar className={`size-10 rounded-full flex items-center justify-center ${receipt.type === "BUY" ? "bg-red-500/30 text-red-500" : "bg-success/30 text-success"}`}>{receipt.type === "BUY" ? <CornerRightUp /> : <CornerRightDown />}</Avatar>
               </div>
 
-              <div className="flex flex-col">
-                <span className={`font-bold text-2xl ${receipt.type === "BUY" ? "text-red-500" : "text-success"}`}>{formatToPrice(receipt.value)}</span>
+              <div className="flex flex-col">import { formatBRL } from '@/utils/currencies-util'import { formatBRL } from '@/utils/currencies-util'import { formatBRL } from '@/utils/currencies-util'
                 <span className="text-primary-foreground font-bold text-md">{receipt.title}</span>
                 <span className="text-muted-foreground text-sm">{receipt.description}</span>
                 <span className="text-muted-foreground text-sm">{receipt.createdAt}</span>

@@ -8,7 +8,7 @@ import { Avatar } from "@/components/ui/avatar";
 
 // utils
 import { timeZone } from "@/utils/dates-util";
-import { formatToPrice } from "@/utils/strings-util";
+import { formatBRL } from '@/utils/currencies-util'
 
 export default function DepositsPage() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -46,7 +46,7 @@ export default function DepositsPage() {
             </div>
 
             <div className="flex w-full items-center justify-center">
-              <span className="text-primary-foreground font-bold text-2xl">{formatToPrice(deposit.value)}</span>
+              <span className="text-primary-foreground font-bold text-2xl">{formatBRL(deposit.value)}</span>
             </div>
           </div>
         ))}

@@ -22,13 +22,13 @@ export type CreateConfigSchema = z.infer<typeof createConfigSchema>;
 
 // schemas
 export const createConfigSchema = z.object({
-  minDepositValue: z.number().min(0, "Valor mínimo de depósito inválido."),
-  minGameTotalValueMultiplicator: z.number().min(0, "Multiplicador de valor total mínimo do jogo inválido."),
-  defaultFirstPrizeValue: z.number().min(0, "Valor do primeiro prêmio inválido."),
-  defaultSecondPrizeValue: z.number().min(0, "Valor do segundo prêmio inválido."),
-  defaultThirdPrizeValue: z.number().min(0, "Valor do terceiro prêmio inválido."),
-  defaultTicketMinPrice: z.number().min(0, "Preço mínimo de cartela inválido."),
-  defaultTimeBetweenGames: z.number().min(0, "Tempo entre jogos inválido."),
+  minDepositValue: z.coerce.number().min(0, "Valor mínimo de depósito inválido."),
+  minGameTotalValueMultiplicator: z.coerce.number().min(0, "Multiplicador de valor total mínimo do jogo inválido."),
+  defaultFirstPrizeValue: z.coerce.number().min(0, "Valor do primeiro prêmio inválido."),
+  defaultSecondPrizeValue: z.coerce.number().min(0, "Valor do segundo prêmio inválido."),
+  defaultThirdPrizeValue: z.coerce.number().min(0, "Valor do terceiro prêmio inválido."),
+  defaultTicketMinPrice: z.coerce.number().min(0, "Preço mínimo de cartela inválido."),
+  defaultTimeBetweenGames: z.coerce.number().min(0, "Tempo entre jogos inválido."),
   isActiveHomePopup: z.boolean(),
   isActiveDepositBonus: z.boolean(),
 });

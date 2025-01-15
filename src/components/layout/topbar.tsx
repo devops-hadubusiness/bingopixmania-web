@@ -17,17 +17,17 @@ import { StoreContext } from "@/contexts/StoreContext";
 
 // utils
 import { routes } from "@/utils/routes-util";
-import { isUUID } from "@/utils/uuids-util";
+import { isUUID } from "@/utils/regex-util";
 
 // store
-import { useStore } from "@/store/store";
+import { useAuthStore } from "@/store/auth";
 
 // types
 type BreadcrumbItemProps = { name: string; path: string };
 
 export default function Topbar(): JSX.Element {
   const { activeRoute } = useContext(StoreContext);
-  const { user, logout } = useStore();
+  const { user, logout } = useAuthStore()
   const navigate = useNavigate();
   const [breadcrumb, setBreadcrumb] = useState<BreadcrumbItemProps[]>([]);
   const isMobile = useMediaQuery("(max-width:767px)");

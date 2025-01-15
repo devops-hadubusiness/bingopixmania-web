@@ -1,1 +1,0 @@
-export type CampaignSessionCardActionProps = 'PAUSE' | 'CONTINUE'
