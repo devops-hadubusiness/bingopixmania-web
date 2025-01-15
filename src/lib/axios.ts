@@ -1,41 +1,34 @@
 // packages
-import axios, { AxiosError } from "axios";
-import { Cookies } from "react-cookie";
+import axios, { AxiosError } from 'axios'
 
 // lib
-import { AuthTokenError } from "./errors/AuthTokenError";
+import { AuthTokenError } from './errors/AuthTokenError'
+
+// store
+import { useAuthStore } from '@/store/auth'
 
 function setupAPIClient() {
-  const cookies = new Cookies();
+  const { token, logout } = useAuthStore.getState()
 
   const api = axios.create({
     baseURL: import.meta.env.VITE_API_URL,
-    withCredentials: false, // TODO: somente em dev
-  });
+    withCredentials: false // TODO: somente em dev
+  })
 
   api.interceptors.request.use(
-    (config) => {
-      const token = cookies.get("token");
-      if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
-      }
-      return config;
+    config => {
+      if (token) config.headers.Authorization = `Bearer ${token}`
+      return config
     },
-    (error) => {
-      return Promise.reject(error);
+    error => {
+      return Promise.reject(error)
     }
-  );
+  )
 
   api.interceptors.response.use(
-    (response) => {
-      if ([403, 401].includes(response.data?.statusCode)) {
-        cookies.remove("company", { path: "/" });
-        cookies.remove("user", { path: "/" });
-        cookies.remove("token", { path: "/" });
-        location.href = "/login";
-      }
-
-      return response;
+    response => {
+      if ([403, 401].includes(response.data?.statusCode)) logout()
+      return response
     },
     (error: AxiosError) => {
       if (error.response?.status === 401) {
@@ -43,15 +36,15 @@ function setupAPIClient() {
         if (typeof window !== undefined) {
           // chama a função para deslogar o usuário
         } else {
-          return Promise.reject(new AuthTokenError());
+          return Promise.reject(new AuthTokenError())
         }
       }
 
-      return Promise.reject(error);
+      return Promise.reject(error)
     }
-  );
+  )
 
-  return api;
+  return api
 }
 
-export const api = setupAPIClient();
+export const api = setupAPIClient()

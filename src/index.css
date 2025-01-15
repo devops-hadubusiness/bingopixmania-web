@@ -103,7 +103,7 @@
 body {
   color: hsl(var(--foreground));
   background-color: hsl(var(--background));
-  font-family: "Inter-Regular" !important;
+  font-family: 'Inter-Regular' !important;
   caret-color: hsl(var(--primary));
 }
 
@@ -118,22 +118,22 @@ body {
 }
 
 .font-jakarta {
-  font-family: "PlusJakartaSans-Regular" !important;
+  font-family: 'PlusJakartaSans-Regular' !important;
 }
 
 .font-inter {
-  font-family: "Inter-Regular" !important;
+  font-family: 'Inter-Regular' !important;
 }
 
 @layer base {
   @font-face {
-    font-family: "Inter-Regular";
-    src: url("/fonts/Inter/Inter-Regular.ttf");
+    font-family: 'Inter-Regular';
+    src: url('/fonts/Inter/Inter-Regular.ttf');
   }
 
   @font-face {
-    font-family: "PlusJakartaSans-Regular";
-    src: url("/fonts/PlusJakartaSans/PlusJakartaSans-Regular.ttf");
+    font-family: 'PlusJakartaSans-Regular';
+    src: url('/fonts/PlusJakartaSans/PlusJakartaSans-Regular.ttf');
   }
 
   * {
@@ -147,6 +147,14 @@ body {
 }
 
 @layer utilities {
+  .skeleton {
+    @apply animate-pulse bg-zinc-700 rounded-lg text-transparent;
+
+    & * {
+      @apply !bg-zinc-500 rounded-lg text-transparent;
+    }
+  }
+
   ::-webkit-scrollbar {
     width: 8px;
   }
@@ -179,7 +187,6 @@ body {
     }
   }
 }
-
 
 /* Animations */
 @keyframes fade-in {
