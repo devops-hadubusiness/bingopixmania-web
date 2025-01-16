@@ -84,13 +84,11 @@ export default function DepositPage() {
           <span className="text-sm text-gray-500">Digite o valor da recarga</span>
 
           <div className="flex justify-between items-center">
-            <div className={cn("h-full bg-muted-foreground flex items-center justify-center rounded-l-md p-1", isLoading && 'hidden')}>
+            <div className={cn('h-full bg-muted-foreground flex items-center justify-center rounded-l-md p-1', isLoading && 'hidden')}>
               <span className="text-background text-2xl font-bold">R$</span>
             </div>
 
-            <div className="h-full flex items-center justify-center border-b rounded-none">
-              <Input ref={withMask('brl-currency')} className="dark:bg-zinc-200/80 !text-center dark:text-background font-bold text-2xl border-none" type="number" />
-            </div>
+            <Input ref={withMask('brl-currency')} className="!text-center font-bold text-2xl rounded-l-none" type="number" />
           </div>
 
           <span className="text-sm text-gray-500">Valor mínimo para depósito: R$ 3,00</span>

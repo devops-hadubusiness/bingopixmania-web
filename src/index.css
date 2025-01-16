@@ -151,7 +151,7 @@ body {
     @apply animate-pulse bg-zinc-700 rounded-lg text-transparent;
 
     & * {
-      @apply !bg-zinc-500 rounded-lg text-transparent;
+      @apply !bg-zinc-500 rounded-lg text-transparent border-none;
     }
   }
 

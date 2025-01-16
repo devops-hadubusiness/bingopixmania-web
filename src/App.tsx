@@ -1,6 +1,6 @@
 // packages
 import { createElement, ReactNode, useContext } from 'react'
-import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom'
+import { BrowserRouter as Router, Route, Routes, Navigate, Outlet } from 'react-router-dom'
 
 // auth
 import { AuthGuard } from '@/auth/auth-guard'
@@ -18,17 +18,26 @@ import { Avatar, AvatarImage } from '@/components/ui/avatar'
 import NotFound from '@/pages/NotFound'
 
 // utils
-import { routes } from '@/utils/routes-util'
+import { routes, checkRoutePermission } from '@/utils/routes-util'
 
 // contexts
 import { ThemeProvider, useTheme } from '@/contexts/ThemeContext'
 import { StoreContext, StoreProvider } from '@/contexts/StoreContext'
 
+// store
+import { useAuthStore } from '@/store/auth'
+
+// types
+type ProtectedRouteProps = {
+  isAllowed: boolean
+  redirectTo: string
+}
+
 function Main({ children }: { children: Readonly<ReactNode> }) {
   const { theme } = useTheme()
   const { containerStyle } = useContext(StoreContext)
-  const showHeader = !['/404', '/login', '/'].includes(location.pathname)
-  const showSidebar = !['/404', '/login', '/'].includes(location.pathname)
+  const showHeader = !['/401', '/404', '/login', '/'].includes(location.pathname)
+  const showSidebar = !['/401', '/404', '/login', '/'].includes(location.pathname)
 
   function _openWhatsApp() {
     const phoneNumber = '+554195690272'
@@ -56,11 +65,29 @@ function Main({ children }: { children: Readonly<ReactNode> }) {
   )
 }
 
+function ProtectedRoute({ isAllowed, redirectTo }: ProtectedRouteProps) {
+  if (!isAllowed) {
+    return <Navigate to={redirectTo} replace />
+  }
+
+  return <Outlet />
+}
+
 function App() {
+  const { user } = useAuthStore()
+
   return (
     <Routes>
       {routes.map(route => {
-        return <Route key={route.name} path={route.path} element={route.component ? <Main>{createElement(route.component)}</Main> : <NotFound />} />
+        if (!route.roles?.length) {
+          return <Route key={route.name} path={route.path} element={route.component ? <Main>{createElement(route.component)}</Main> : <NotFound />} />
+        } else {
+          return (
+            <Route key={route.name} element={<ProtectedRoute isAllowed={checkRoutePermission(user, route.roles)} redirectTo="/401" />}>
+              <Route key={route.name} path={route.path} element={route.component ? <Main>{createElement(route.component)}</Main> : <NotFound />} />
+            </Route>
+          )
+        }
       })}
       <Route path="*" element={<Navigate to="/404" replace />} />
     </Routes>

@@ -30,7 +30,7 @@ import { loginSchema, LoginSchema } from '@/entities/user/user'
 const loc = `@/components/forms/login-form`
 
 export function LoginForm() {
-  const { toast } = useToast()
+  const { toast, dismiss } = useToast()
   const navigate = useNavigate()
   const { login, isAuthenticated } = useAuthStore()
   const [isShowingPassword, setIsShowingPassword] = useState(false)
@@ -54,8 +54,12 @@ export function LoginForm() {
       if (response.data?.statusCode === HTTP_STATUS_CODE.OK) {
         const user = response.data.body[0]
         const token = response.data.token
-        toast({ variant: 'success', title: 'Sucesso', description: 'Você será redirecionado ...' })
-        setTimeout(() => login(user, token), 500)
+        const { dismiss } = toast({ variant: 'success', title: 'Sucesso', description: 'Você será redirecionado ...' })
+
+        setTimeout(() => {
+          login(user, token)
+          dismiss()
+        }, 1000)
       } else toast({ variant: 'destructive', title: 'Ops ...', description: response.data?.statusMessage || 'Credenciais incorretas.' })
     } catch (err) {
       console.error(`Unhandled rejection at ${loc}._auth function. Details: ${err}`)

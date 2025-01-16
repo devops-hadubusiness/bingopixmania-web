@@ -1,13 +1,18 @@
 // packages
-import { LogIn, Search, Dices, Banknote, CircleDollarSign, HandCoins, ReceiptText, Flame, UserRoundPlus, BookOpenText, List } from 'lucide-react'
+import { ShieldOff, LogIn, Search, Dices, Banknote, CircleDollarSign, HandCoins, ReceiptText, Flame, UserRoundPlus, BookOpenText, List, Settings } from 'lucide-react'
 
 // types
 import { RouteProps } from '@/types/routes-types'
 
+// entities
+import { UserProps, user_role } from '@/entities/user/user'
+
 // pages
+import Unauthorized from '@/pages/Unauthorized'
 import NotFound from '@/pages/NotFound'
 import Login from '@/pages/Login'
 import Home from '@/pages/Home'
+import Configs from '@/pages/Configs'
 import Turns from '@/pages/Turns'
 import Deposit from '@/pages/Deposit'
 import Prizes from '@/pages/Prizes'
@@ -17,7 +22,28 @@ import Indications from '@/pages/Indications'
 import Help from '@/pages/Help'
 import SpecialTurns from '@/pages/SpecialTurns'
 
+// store
+import { useAuthStore } from '@/store/auth'
+
+export const checkRoutePermission = (user: UserProps | null, roles: user_role[]) => {
+  if (user) return roles.includes(user?.role)
+  else {
+    const storeUser = useAuthStore.getState().user
+    return roles.includes(storeUser?.role)
+  }
+}
+
 export const routes: RouteProps[] = [
+  {
+    name: '401',
+    path: '/401',
+    icon: ShieldOff,
+    component: Unauthorized,
+    disabled: () => false,
+    showOnHome: () => false,
+    showOnSideDrawer: () => false,
+    showOnTopbar: () => false
+  },
   {
     name: '404',
     path: '/404',
@@ -49,26 +75,28 @@ export const routes: RouteProps[] = [
     showOnTopbar: () => false
   },
   {
-    name: 'Depositar',
-    path: '/depositar',
-    icon: Banknote,
-    category: 'page',
-    component: Deposit,
-    disabled: () => false,
-    showOnHome: () => false,
-    showOnSideDrawer: () => false,
-    showOnTopbar: () => false
-  },
-  {
     name: 'Sorteio Ao Vivo',
     path: '/home',
     group: 'Jogos',
     icon: Dices,
     category: 'page',
     component: Home,
+    roles: Object.keys(user_role),
     disabled: () => false,
     showOnHome: () => false,
     showOnSideDrawer: () => true,
+    showOnTopbar: () => false
+  },
+  {
+    name: 'Depositar',
+    path: '/depositar',
+    icon: Banknote,
+    category: 'page',
+    component: Deposit,
+    roles: Object.keys(user_role),
+    disabled: () => false,
+    showOnHome: () => false,
+    showOnSideDrawer: () => false,
     showOnTopbar: () => false
   },
   {
@@ -79,6 +107,7 @@ export const routes: RouteProps[] = [
     description: ``,
     category: 'page',
     component: Turns,
+    roles: Object.keys(user_role),
     disabled: () => false,
     showOnHome: () => true,
     showOnSideDrawer: () => true,
@@ -92,6 +121,7 @@ export const routes: RouteProps[] = [
     description: ``,
     category: 'page',
     component: Prizes,
+    roles: Object.keys(user_role),
     disabled: () => false,
     showOnHome: () => true,
     showOnSideDrawer: () => true,
@@ -105,6 +135,7 @@ export const routes: RouteProps[] = [
     description: ``,
     category: 'page',
     component: Deposits,
+    roles: Object.keys(user_role),
     disabled: () => false,
     showOnHome: () => true,
     showOnSideDrawer: () => true,
@@ -118,6 +149,7 @@ export const routes: RouteProps[] = [
     description: ``,
     category: 'page',
     component: Receipts,
+    roles: Object.keys(user_role),
     disabled: () => false,
     showOnHome: () => true,
     showOnSideDrawer: () => true,
@@ -131,6 +163,7 @@ export const routes: RouteProps[] = [
     description: ``,
     category: 'page',
     component: Indications,
+    roles: Object.keys(user_role),
     disabled: () => false,
     showOnHome: () => true,
     showOnSideDrawer: () => true,
@@ -144,6 +177,7 @@ export const routes: RouteProps[] = [
     description: ``,
     category: 'page',
     component: Help,
+    roles: Object.keys(user_role),
     disabled: () => false,
     showOnHome: () => true,
     showOnSideDrawer: () => true,
@@ -156,11 +190,25 @@ export const routes: RouteProps[] = [
     icon: Flame,
     category: 'page',
     component: SpecialTurns,
+    roles: Object.keys(user_role),
     highlight: true,
     button: true,
     disabled: () => false,
     showOnHome: () => false,
     showOnSideDrawer: () => true,
+    showOnTopbar: () => false
+  },
+  {
+    name: 'Configurações',
+    path: '/configuracoes',
+    group: 'Configurações',
+    icon: Settings,
+    category: 'page',
+    component: Configs,
+    roles: [user_role.ADMIN, user_role.MODERATOR],
+    disabled: () => !checkRoutePermission(null, [user_role.ADMIN, user_role.MODERATOR]),
+    showOnHome: () => false,
+    showOnSideDrawer: () => checkRoutePermission(null, [user_role.ADMIN, user_role.MODERATOR]),
     showOnTopbar: () => false
   }
 ]
