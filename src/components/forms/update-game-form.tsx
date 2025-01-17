@@ -1,8 +1,9 @@
 // packages
 import { useState } from 'react'
-import { Check, Clock, HandCoins } from 'lucide-react'
+import { Check, Clock, Dices, HandCoins } from 'lucide-react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { withMask } from 'use-mask-input'
 
 // components
 import { Input } from '@/components/ui/input'
@@ -10,9 +11,10 @@ import { Button } from '@/components/ui/button'
 import { Form, FormControl, FormField, FormItem, FormMessage, FormLabel } from '@/components/ui/form'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select'
 
 // entities
-import { ConfigProps, UpsertConfigsSchema, upsertConfigsSchema } from '@/entities/config/config'
+import { formatted_game_type, game_type, GameProps, UpdateGameSchema, updateGameSchema } from '@/entities/game/game'
 
 // store
 import { useAuthStore } from '@/store/auth'
@@ -27,51 +29,41 @@ import { api } from '@/lib/axios'
 import { HTTP_STATUS_CODE } from '@/constants/http'
 
 // types
-type UpsertConfigsFormProps = {
-  configs?: ConfigProps
+type UpdateGameFormProps = {
+  game: GameProps
 }
 
 // variables
-const loc = 'components/forms/upsert-configs-form'
+const loc = 'components/forms/update-game-form'
 
-export function UpsertConfigsForm({ configs }: UpsertConfigsFormProps) {
+export function UpdateGameForm({ game }: UpdateGameFormProps) {
   const { user } = useAuthStore()
   const { toast } = useToast()
   const [isLoading, setIsLoading] = useState<boolean>(false)
 
-  const form = useForm<UpsertConfigsSchema>({
-    resolver: zodResolver(upsertConfigsSchema),
+  const form = useForm<UpdateGameSchema>({
+    resolver: zodResolver(updateGameSchema),
     defaultValues: {
       userRef: user?.ref,
-      ...(configs || {
-        minDepositValue: 1,
-        minGameTotalValueMultiplicator: 10,
-        defaultFirstPrizeValue: 10,
-        defaultSecondPrizeValue: 20,
-        defaultThirdPrizeValue: 50,
-        defaultTicketPrice: 0.5,
-        defaultTimeBetweenGames: 10,
-        isActiveHomePopup: true,
-        isActiveDepositBonus: true
-      })
+      ...(game || {})
     }
   })
 
-  async function _upsertConfigs() {
+  async function _updateGame() {
     try {
       setIsLoading(true)
 
-      const response = await api.post(`/`, {
-        action: 'configs',
+      const response = await api.put(`/`, {
+        action: 'game',
         ...form.getValues()
       })
 
-      if ([HTTP_STATUS_CODE.OK, HTTP_STATUS_CODE.CREATED].includes(response.data?.statusCode)) {
-        toast({ variant: 'success', title: 'Sucesso', description: response.data?.statusMessage || 'Configurações salvas com sucesso.' })
-      } else toast({ variant: 'destructive', title: 'Ops ...', description: response.data?.statusMessage || 'Não foi possível salvar as configurações.' })
+      if (response.data?.statusCode === HTTP_STATUS_CODE.OK) {
+        toast({ variant: 'success', title: 'Sucesso', description: response.data?.statusMessage || 'Jogo atualizado com sucesso.' })
+      } else toast({ variant: 'destructive', title: 'Ops ...', description: response.data?.statusMessage || 'Não foi possível atualizar o jogo.' })
     } catch (err) {
-      console.error(`Unhandled rejection at ${loc}._upsertConfigs function. Details: ${err}`)
-      toast({ variant: 'destructive', title: 'Ops ...', description: 'Não foi possível salvar as configurações.' })
+      console.error(`Unhandled rejection at ${loc}._updateGame function. Details: ${err}`)
+      toast({ variant: 'destructive', title: 'Ops ...', description: 'Não foi possível atualizar o jogo.' })
     } finally {
       setIsLoading(false)
     }
@@ -79,21 +71,77 @@ export function UpsertConfigsForm({ configs }: UpsertConfigsFormProps) {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(_upsertConfigs)} className="flex flex-col gap-2 text-background">
-        {/* MIN DEPOSIT VALUE */}
+      <form onSubmit={form.handleSubmit(_updateGame)} className="flex flex-col gap-2 text-background">
+        {/* DATE TIME */}
         <FormField
           control={form.control}
-          name="minDepositValue"
+          name="dateTime"
           render={({ field }) => (
             <FormItem className="w-full">
-              <FormLabel>Valor mínimo de depósito:</FormLabel>
+              <FormLabel>Data e hora:</FormLabel>
+              <FormControl>
+                <div className="flex justify-between items-center">
+                  <div className="h-full bg-muted-foreground flex items-center justify-center rounded-l-md p-2">
+                    <Clock className="size-6" />
+                  </div>
+
+                  <Input {...field} ref={withMask('99/99/9999 99:99')} className="!text-center text-xl rounded-l-none" placeholder="Digite a data e hora" disabled={isLoading} />
+                </div>
+              </FormControl>
+
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        {/* TYPE */}
+        <FormField
+          control={form.control}
+          name="type"
+          render={({ field }) => (
+            <FormItem className="w-full">
+              <FormLabel>Tipo:</FormLabel>
+              <FormControl>
+                <div className="flex justify-between items-center">
+                  <div className="h-full bg-muted-foreground flex items-center justify-center rounded-l-md p-2">
+                    <Dices className="size-6" />
+                  </div>
+
+                  <Select disabled={isLoading} onValueChange={value => field.onChange(value)} value={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {Object.entries(formatted_game_type).map(([key, value]) => (
+                        <SelectItem key={key} value={key}>
+                          {value}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </FormControl>
+
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="ticketPrice"
+          render={({ field }) => (
+            <FormItem className="w-full">
+              <FormLabel>Preço de cartela:</FormLabel>
               <FormControl>
                 <div className="flex justify-between items-center">
                   <div className="h-full bg-muted-foreground flex items-center justify-center rounded-l-md p-1">
                     <span className="text-background text-2xl font-bold">R$</span>
                   </div>
 
-                  <Input {...field} type="number" className="!text-center text-xl rounded-l-none" placeholder="Digite o valor" disabled={isLoading} />
+                  <Input {...field} type="number" className="!text-center text-xl rounded-l-none" placeholder="Digite o preço" disabled={isLoading} />
                 </div>
               </FormControl>
 
@@ -102,32 +150,10 @@ export function UpsertConfigsForm({ configs }: UpsertConfigsFormProps) {
           )}
         />
 
-        {/* MIN GAME TOTAL VALUE MULTIPLICATOR */}
+        {/* FIRST PRIZE VALUE */}
         <FormField
           control={form.control}
-          name="minGameTotalValueMultiplicator"
-          render={({ field }) => (
-            <FormItem className="w-full">
-              <FormLabel>Multiplicador mínimo para início de jogo:</FormLabel>
-              <FormControl>
-                <div className="flex justify-between items-center">
-                  <div className="h-full bg-muted-foreground flex items-center justify-center rounded-l-md p-2">
-                    <HandCoins className="size-6" />
-                  </div>
-
-                  <Input {...field} type="number" className="!text-center text-xl rounded-l-none" placeholder="Digite o multiplicador" disabled={isLoading} />
-                </div>
-              </FormControl>
-
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        {/* DEFAULT FIRST PRIZE VALUE */}
-        <FormField
-          control={form.control}
-          name="defaultFirstPrizeValue"
+          name="firstPrizeValue"
           render={({ field }) => (
             <FormItem className="w-full">
               <FormLabel>Valor de primeiro prêmio:</FormLabel>
@@ -146,10 +172,10 @@ export function UpsertConfigsForm({ configs }: UpsertConfigsFormProps) {
           )}
         />
 
-        {/* DEFAULT SECOND PRIZE VALUE */}
+        {/* SECOND PRIZE VALUE */}
         <FormField
           control={form.control}
-          name="defaultSecondPrizeValue"
+          name="secondPrizeValue"
           render={({ field }) => (
             <FormItem className="w-full">
               <FormLabel>Valor de segundo prêmio:</FormLabel>
@@ -168,10 +194,10 @@ export function UpsertConfigsForm({ configs }: UpsertConfigsFormProps) {
           )}
         />
 
-        {/* DEFAULT THIRD PRIZE VALUE */}
+        {/* THIRD PRIZE VALUE */}
         <FormField
           control={form.control}
-          name="defaultThirdPrizeValue"
+          name="thirdPrizeValue"
           render={({ field }) => (
             <FormItem className="w-full">
               <FormLabel>Valor de terceiro prêmio:</FormLabel>
@@ -190,78 +216,16 @@ export function UpsertConfigsForm({ configs }: UpsertConfigsFormProps) {
           )}
         />
 
-        {/* DEFAULT TICKET PRICE */}
+        {/* GRANTED PRIZES */}
         <FormField
           control={form.control}
-          name="defaultTicketPrice"
-          render={({ field }) => (
-            <FormItem className="w-full">
-              <FormLabel>Preço padrão de cartela:</FormLabel>
-              <FormControl>
-                <div className="flex justify-between items-center">
-                  <div className="h-full bg-muted-foreground flex items-center justify-center rounded-l-md p-1">
-                    <span className="text-background text-2xl font-bold">R$</span>
-                  </div>
-
-                  <Input {...field} type="number" step={0.25} className="!text-center text-xl rounded-l-none" placeholder="Digite o valor" disabled={isLoading} />
-                </div>
-              </FormControl>
-
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        {/* DEFAULT TIME BETWEEN GAMES */}
-        <FormField
-          control={form.control}
-          name="defaultTimeBetweenGames"
-          render={({ field }) => (
-            <FormItem className="w-full">
-              <FormLabel>Tempo padrão entre jogos:</FormLabel>
-              <FormControl>
-                <div className="flex justify-between items-center">
-                  <div className="h-full bg-muted-foreground flex items-center justify-center rounded-l-md p-2">
-                    <Clock className="size-6" />
-                  </div>
-
-                  <Input {...field} type="number" className="!text-center text-xl rounded-l-none" placeholder="Digite o tempo" disabled={true || isLoading} />
-                </div>
-              </FormControl>
-
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        {/* IS ACTIVE HOME POPUP */}
-        <FormField
-          control={form.control}
-          name="isActiveHomePopup"
+          name="grantedPrizes"
           render={({ field }) => (
             <FormItem className="w-full mt-2">
               <FormControl>
                 <div className="flex items-center gap-x-2">
                   <Checkbox checked={field.value} onCheckedChange={field.onChange} disabled={isLoading} />
-                  <Label className="text-md group-hover:cursor-pointer">Pop-up da Home ativo</Label>
-                </div>
-              </FormControl>
-
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        {/* IS ACTIVE DEPOSIT BONUS  */}
-        <FormField
-          control={form.control}
-          name="isActiveDepositBonus"
-          render={({ field }) => (
-            <FormItem className="w-full">
-              <FormControl>
-                <div className="flex items-center gap-x-2">
-                  <Checkbox checked={field.value} onCheckedChange={field.onChange} disabled={isLoading} />
-                  <Label className="text-md group-hover:cursor-pointer">Bônus de depósito ativo</Label>
+                  <Label className="text-md group-hover:cursor-pointer">Prêmios garantidos</Label>
                 </div>
               </FormControl>
 

@@ -150,7 +150,7 @@ body {
   .skeleton {
     @apply animate-pulse bg-zinc-700 rounded-lg text-transparent;
 
-    & * {
+    & *:not(.not-skeleton) {
       @apply !bg-zinc-500 rounded-lg text-transparent border-none;
     }
   }

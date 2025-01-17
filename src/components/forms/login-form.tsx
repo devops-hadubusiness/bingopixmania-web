@@ -76,6 +76,7 @@ export function LoginForm() {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(_auth)} className="w-full disabled:cursor-not-allowed flex flex-col gap-6">
+        {/* CPF */}
         <FormField
           control={form.control}
           name={'cpf'}
@@ -92,6 +93,7 @@ export function LoginForm() {
           )}
         />
 
+        {/* PASSWORD */}
         <FormField
           control={form.control}
           name={'password'}

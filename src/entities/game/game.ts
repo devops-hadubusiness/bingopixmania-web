@@ -37,7 +37,7 @@ export type GameProps = {
   userId?: number
   dateTime: Date
   type: game_type
-  minTicketPrice: number
+  ticketPrice: number
   firstPrizeValue: number
   secondPrizeValue: number
   thirdPrizeValue: number
@@ -53,17 +53,21 @@ export type GameProps = {
   winners: Winner[]
 }
 
-export type CreateGameSchema = z.infer<typeof createGameSchema>
+export type UpdateGameSchema = z.infer<typeof updateGameSchema>
 
 // schemas
-export const createGameSchema = privateRouteSchema.extend({
-  userRef: z.string().uuid('Referência de usuário inválida.'),
-  dateTime: z.date(),
+export const updateGameSchema = privateRouteSchema.extend({
+  ref: z.string().uuid('Referência de jogo inválida.'),
+  dateTime: z
+    .string()
+    .min(16, 'Data e hora inválida.')
+    .max(16, 'Limite de caracteres: 16.')
+    .regex(/^\d{2}\/\d{2}\/\d{4} \d{2}:\d{2}$/, { message: 'Data e hora inválida.' }),
   type: z.nativeEnum(game_type, { message: 'Tipo de jogo inválido.' }),
-  minTicketPrice: z.coerce.number().min(0, 'Preço mínimo de cartela inválido.'),
-  firstPrizeValue: z.coerce.number().min(0, 'Valor de primeiro prêmio inválido.'),
-  secondPrizeValue: z.coerce.number().min(0, 'Valor de segundo prêmio inválido.'),
-  thirdPrizeValue: z.coerce.number().min(0, 'Valor de terceiro prêmio inválido.'),
+  ticketPrice: z.coerce.number().min(0.05, 'Preço de cartela inválido.'),
+  firstPrizeValue: z.coerce.number().min(1, 'Valor de primeiro prêmio inválido.'),
+  secondPrizeValue: z.coerce.number().min(2, 'Valor de segundo prêmio inválido.'),
+  thirdPrizeValue: z.coerce.number().min(3, 'Valor de terceiro prêmio inválido.'),
   grantedPrizes: z.boolean()
 })
 
@@ -86,8 +90,8 @@ export class Game {
     return this.props.type
   }
 
-  get minTicketPrice() {
-    return this.props.minTicketPrice
+  get ticketPrice() {
+    return this.props.ticketPrice
   }
 
   get firstPrizeValue() {

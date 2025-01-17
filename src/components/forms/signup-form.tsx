@@ -77,6 +77,7 @@ export function SignUpForm({ changeContext }: SignupFormProps) {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(_createUser)} className="w-full disabled:cursor-not-allowed flex flex-col gap-6">
+        {/* NAME */}
         <FormField
           control={form.control}
           name={'name'}
@@ -92,8 +93,10 @@ export function SignUpForm({ changeContext }: SignupFormProps) {
             </FormItem>
           )}
         />
-        
+
+        {/* CPF / PHONE */}
         <div className="flex smAndDown:flex-wrap gap-x-2 gap-y-6 w-full">
+          {/* CPF */}
           <FormField
             control={form.control}
             name={'cpf'}
@@ -110,6 +113,7 @@ export function SignUpForm({ changeContext }: SignupFormProps) {
             )}
           />
 
+          {/* PHONE */}
           <FormField
             control={form.control}
             name={'phone'}
@@ -127,7 +131,9 @@ export function SignUpForm({ changeContext }: SignupFormProps) {
           />
         </div>
 
+        {/* EMAIL / BIRTH DATE */}
         <div className="flex smAndDown:flex-wrap gap-x-2 gap-y-6 w-full">
+          {/* EMAIL */}
           <FormField
             control={form.control}
             name={'email'}
@@ -144,6 +150,7 @@ export function SignUpForm({ changeContext }: SignupFormProps) {
             )}
           />
 
+          {/* BIRTH DATE */}
           <FormField
             control={form.control}
             name={'birthDate'}
@@ -161,6 +168,7 @@ export function SignUpForm({ changeContext }: SignupFormProps) {
           />
         </div>
 
+        {/* PASSWORD */}
         <FormField
           control={form.control}
           name={'password'}
@@ -184,6 +192,7 @@ export function SignUpForm({ changeContext }: SignupFormProps) {
           )}
         />
 
+        {/* PASSWORD CONFIRM */}
         <FormField
           control={form.control}
           name={'passwordConfirm'}
@@ -207,6 +216,7 @@ export function SignUpForm({ changeContext }: SignupFormProps) {
           )}
         />
 
+        {/* CUSTOM ERRORS */}
         {Object.values(form.formState.errors || {})?.some(e => e.type === 'custom') && (
           <FormMessage>
             {Object.values(form.formState.errors)
