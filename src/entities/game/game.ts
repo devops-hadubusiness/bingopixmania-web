@@ -19,12 +19,14 @@ export enum formatted_game_type {
 }
 
 export enum game_status {
+  RETROACTIVE = 'RETROACTIVE',
   OPEN_SALES = 'OPEN_SALES',
   RUNNING = 'RUNNING',
   FINISHED = 'FINISHED'
 }
 
 export enum formatted_game_status {
+  RETROACTIVE = 'Retroativo',
   OPEN_SALES = 'Vendas Abertas',
   RUNNING = 'Em Andamento',
   FINISHED = 'Finalizado'

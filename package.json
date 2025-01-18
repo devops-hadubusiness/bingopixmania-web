@@ -1,8 +1,12 @@
 {
   "name": "bingopixmania-web",
-  "private": true,
   "version": "1.0.0",
+  "private": true,
+  "description": "<!-- title: 'Bingo Pix Mania Web' -->",
   "type": "module",
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
