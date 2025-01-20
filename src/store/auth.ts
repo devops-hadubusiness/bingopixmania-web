@@ -12,6 +12,7 @@ interface AuthState {
   isAuthenticated: boolean
   login: (user: UserProps, token: string) => void
   logout: () => void
+  udpateUserBalance: (balance: number) => void
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -35,6 +36,15 @@ export const useAuthStore = create<AuthState>()(
         })
 
         window.location.href = '/login'
+      },
+      udpateUserBalance: (balance: number) => {
+        set(state => ({
+          ...state,
+          user: {
+            ...(state.user as UserProps),
+            balance: balance
+          }
+        }))
       }
     }),
     {

@@ -50,7 +50,7 @@ function Main({ children }: { children: Readonly<ReactNode> }) {
     <>
       {showSidebar && <AppSidebar />}
 
-      <div className={`dark:bg-gray-850 bg-gray-100 ${showHeader ? 'smAndDown:pl-12 mdAndUp:pl-[268px] pr-14 py-12' : 'gradient-container'}`} style={containerStyle}>
+      <div className={`dark:bg-gray-850 bg-gray-100 ${showHeader ? 'xsAndDown:overflow-x-hidden smAndDown:px-12 lgAndUp:pl-[268px] mdAndUp:pr-14 py-12' : 'gradient-container'}`} style={containerStyle}>
         {showHeader && <Topbar />}
 
         <div className={theme === 'dark' ? 'dark-bottom-gradient' : 'bottom-gradient'} style={{ zIndex: showSidebar && showHeader ? -1 : 1, height: showSidebar && showHeader ? 400 : 200 }}></div>

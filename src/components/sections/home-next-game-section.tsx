@@ -28,12 +28,13 @@ import { formatTimestampToPattern } from '@/utils/dates-util'
 // types
 type HomeNextGameSectionProps = {
   parentLoading: boolean
+  updateNextGame: (nextGame?: GameProps) => void
 }
 
 // variables
 const loc = `@/components/sections/home-next-game-section`
 
-export function HomeNextGameSection({ parentLoading }: HomeNextGameSectionProps) {
+export function HomeNextGameSection({ parentLoading, updateNextGame }: HomeNextGameSectionProps) {
   const { user } = useAuthStore()
   const { toast } = useToast()
   const [isLoading, setIsLoading] = useState<boolean>(parentLoading || true)
@@ -45,7 +46,7 @@ export function HomeNextGameSection({ parentLoading }: HomeNextGameSectionProps)
 
       const response = await api.get(`/`, {
         params: {
-          action: 'games_next',
+          action: 'game_next',
           userRef: user?.ref
         }
       })
@@ -63,6 +64,10 @@ export function HomeNextGameSection({ parentLoading }: HomeNextGameSectionProps)
   useEffect(() => {
     setIsLoading(parentLoading)
   }, [parentLoading])
+
+  useEffect(() => {
+    updateNextGame(nextGame)
+  }, [nextGame])
 
   useEffect(() => {
     _fetchNextGame()

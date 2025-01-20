@@ -4,7 +4,7 @@ import { ColumnDef } from '@tanstack/react-table'
 // components
 import { Avatar, AvatarImage } from '@/components/ui/avatar'
 import { CustomDataTable } from '@/components/table/custom-data-table'
-import { HomeNextGameTicketsSection } from '@/components/sections/home-next-game-tickets-section'
+import { GameTicketsSection } from '@/components/sections/game-tickets-section'
 
 export function HomeGameContext() {
   const columns: ColumnDef<any>[] = [
@@ -199,7 +199,7 @@ export function HomeGameContext() {
         </div>
       </div>
 
-      <HomeNextGameTicketsSection />
+      <GameTicketsSection />
     </div>
   )
 }

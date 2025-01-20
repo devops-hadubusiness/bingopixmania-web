@@ -111,9 +111,15 @@ const config = {
       pattern: 'url(/images/backgrounds/bg.svg)'
     },
     screens: {
+      xxxxsAndDown: { min: '0px', max: '249px' },
+      xxxxs: { min: '0px', max: '249px' },
+      xxxxsAndUp: { min: '0px' },
+      xxxsAndDown: { min: '0px', max: '375px' },
+      xxxs: { min: '250px', max: '375px' },
+      xxxsAndUp: { min: '250px' },
       xxsAndDown: { min: '0px', max: '430px' },
-      xxs: { min: '0px', max: '430px' },
-      xxsAndUp: { min: '0px' },
+      xxs: { min: '376px', max: '430px' },
+      xxsAndUp: { min: '376px' },
       xsAndDown: { min: '0px', max: '639px' },
       xs: { min: '431px', max: '639px' },
       xsAndUp: { min: '431px' },

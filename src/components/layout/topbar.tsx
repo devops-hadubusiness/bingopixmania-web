@@ -1,72 +1,68 @@
 // packages
-import React, { useEffect, useState, useContext, Fragment } from "react";
-import { CircleUserRound, LogOut } from "lucide-react";
-import { useMediaQuery } from "@/hooks/use-media-query";
-import { useNavigate } from "react-router-dom";
+import React, { useEffect, useState, useContext, Fragment } from 'react'
+import { useMediaQuery } from '@/hooks/use-media-query'
+import { useNavigate } from 'react-router-dom'
 
 // components
-import { Menubar, MenubarContent, MenubarItem, MenubarMenu, MenubarTrigger } from "@/components/ui/menubar";
-import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { SidebarTrigger } from "@/components/ui/sidebar";
-import { Button } from "@/components/ui/button";
+import { Menubar } from '@/components/ui/menubar'
+import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbSeparator } from '@/components/ui/breadcrumb'
+import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
+import { SidebarTrigger } from '@/components/ui/sidebar'
+import { Button } from '@/components/ui/button'
 
 // contexts
-import { StoreContext } from "@/contexts/StoreContext";
+import { StoreContext } from '@/contexts/StoreContext'
 
 // utils
-import { routes } from "@/utils/routes-util";
-import { isUUID } from "@/utils/regex-util";
-
-// store
-import { useAuthStore } from "@/store/auth";
+import { routes } from '@/utils/routes-util'
+import { isUUID } from '@/utils/regex-util'
 
 // types
-type BreadcrumbItemProps = { name: string; path: string };
+type BreadcrumbItemProps = { name: string; path: string }
 
 export default function Topbar(): JSX.Element {
-  const { activeRoute } = useContext(StoreContext);
-  const { user, logout } = useAuthStore()
-  const navigate = useNavigate();
-  const [breadcrumb, setBreadcrumb] = useState<BreadcrumbItemProps[]>([]);
-  const isMobile = useMediaQuery("(max-width:767px)");
+  const { activeRoute } = useContext(StoreContext)
+  const navigate = useNavigate()
+  const [breadcrumb, setBreadcrumb] = useState<BreadcrumbItemProps[]>([])
+  const isMobile = useMediaQuery('(max-width:767px)')
+  const isMdAndDown = useMediaQuery('(max-width:1023px)')
 
   const _formatPathname = (pathname: string): BreadcrumbItemProps[] => {
     const paths = pathname
-      .split("/")
-      .map((p) => {
-        let name = String(p).charAt(0).toUpperCase() + String(p).slice(1);
+      .split('/')
+      .map(p => {
+        let name = String(p).charAt(0).toUpperCase() + String(p).slice(1)
         return {
           name: isUUID(name)
-            ? ""
+            ? ''
             : name
-                .split("-")
+                .split('-')
                 .filter(Boolean)
-                .reduce((total, current) => (total += ` ${current.charAt(0).toUpperCase() + current.slice(1)}`), ""),
-          path: pathname.substring(0, pathname.indexOf(p) + p.length),
-        };
+                .reduce((total, current) => (total += ` ${current.charAt(0).toUpperCase() + current.slice(1)}`), ''),
+          path: pathname.substring(0, pathname.indexOf(p) + p.length)
+        }
       })
-      .filter((p) => !!p.name);
+      .filter(p => !!p.name)
 
-    if (paths?.at(0)?.path === "/sorteio-ao-vivo") return paths;
-    return [{ name: "Sorteio Ao Vivo", path: "/sorteio-ao-vivo" }].concat(paths);
-  };
+    if (paths?.at(0)?.path === '/sorteio-ao-vivo') return paths
+    return [{ name: 'Sorteio Ao Vivo', path: '/sorteio-ao-vivo' }].concat(paths)
+  }
 
   useEffect(() => {
-    setBreadcrumb(_formatPathname(activeRoute));
-  }, [activeRoute]);
+    setBreadcrumb(_formatPathname(activeRoute))
+  }, [activeRoute])
 
   return (
-    <Menubar className={`border-t-0 border-x-0 border-b-1 border-border rounded-none h-[75px] flex align-center justify-between px-12 shadow-soft bg-background dark:bg-gray-900 fixed top-0 z-[100] ${isMobile ? "!w-full left-0" : "!w-[calc(100%_-_220px)] left-[220px]"}`}>
-      {isMobile && <SidebarTrigger />}
+    <Menubar className={`border-t-0 border-x-0 border-b-1 border-border rounded-none h-[75px] flex align-center justify-between px-12 shadow-soft bg-background dark:bg-gray-900 fixed top-0 z-[100] ${isMdAndDown ? '!w-full left-0' : '!w-[calc(100%_-_220px)] left-[220px]'}`}>
+      {isMdAndDown && <SidebarTrigger />}
 
-      <div className="flex">
-        <Breadcrumb className="smAndDown:hidden">
+      <div className="flex flex-grow items-center mdAndDown:justify-center lgAndUp:justify-between">
+        <Breadcrumb className="mdAndDown:hidden">
           <BreadcrumbList>
             {breadcrumb.map((b, i) => (
               <React.Fragment key={i}>
-                <BreadcrumbItem className={`${i == breadcrumb.length - 1 && "font-semibold text-primary-text"}`}>
+                <BreadcrumbItem className={`${i == breadcrumb.length - 1 && 'font-semibold text-primary-text'}`}>
                   <BreadcrumbLink href={b.path}>{b.name}</BreadcrumbLink>
                 </BreadcrumbItem>
                 {i < breadcrumb.length - 1 && <BreadcrumbSeparator />}
@@ -74,15 +70,17 @@ export default function Topbar(): JSX.Element {
             ))}
           </BreadcrumbList>
         </Breadcrumb>
+
+        <span className="xxxxsAndDown:hidden lgAndUp:hidden text-2xl text-foreground font-bold text-center line-clamp-2">{breadcrumb?.at(-1)?.name || ''}</span>
       </div>
 
       <div className="smAndDown:hidden flex items-center justify-center h-full gap-2">
-        <Button variant="default" className="bg-success hover:bg-success hover:brightness-125 flex items-center gap-2" onClick={() => navigate(activeRoute === "/sorteio-ao-vivo" ? "/depositar" : "/sorteio-ao-vivo")}>
-          {activeRoute === "/sorteio-ao-vivo" ? "Depositar" : "Sorteio ao Vivo"}
+        <Button variant="default" className="bg-success hover:bg-success hover:brightness-125 flex items-center gap-2" onClick={() => navigate(activeRoute === '/sorteio-ao-vivo' ? '/depositar' : '/sorteio-ao-vivo')}>
+          {activeRoute === '/sorteio-ao-vivo' ? 'Depositar' : 'Sorteio ao Vivo'}
         </Button>
 
         {routes
-          .filter((r) => r.showOnTopbar && r.showOnTopbar())
+          .filter(r => r.showOnTopbar && r.showOnTopbar())
           .map((r, i) => (
             <Fragment key={i}>
               {r.button ? (
@@ -91,11 +89,11 @@ export default function Topbar(): JSX.Element {
                   {r.icon ? <r.icon className="size-5" color={r.icon.color} /> : null}
                 </Button>
               ) : (
-                <a href={r.disabled && r.disabled() ? "" : r.path || "#"} className={`flex ${r.disabled && r.disabled() ? "disabled hover:cursor-not-allowed" : ""}`}>
+                <a href={r.disabled && r.disabled() ? '' : r.path || '#'} className={`flex ${r.disabled && r.disabled() ? 'disabled hover:cursor-not-allowed' : ''}`}>
                   <TooltipProvider delayDuration={0}>
                     <Tooltip>
                       <TooltipTrigger className="m-auto">
-                        <Avatar className={`bg-accent p-3 ${r.disabled && r.disabled() ? "hover:cursor-not-allowed" : "hover:cursor-pointer"}`}>{r.icon ? <r.icon color={r.icon.color} /> : <AvatarFallback className="text-foreground">{r.name?.charAt(0)}</AvatarFallback>}</Avatar>
+                        <Avatar className={`bg-accent p-3 ${r.disabled && r.disabled() ? 'hover:cursor-not-allowed' : 'hover:cursor-pointer'}`}>{r.icon ? <r.icon color={r.icon.color} /> : <AvatarFallback className="text-foreground">{r.name?.charAt(0)}</AvatarFallback>}</Avatar>
                       </TooltipTrigger>
 
                       <TooltipContent className="bg-accent rounded-lg border-border py-1">
@@ -108,28 +106,6 @@ export default function Topbar(): JSX.Element {
             </Fragment>
           ))}
       </div>
-
-      {/* <div className="flex h-full space-x-2">
-        <div className="flex flex-col align-center justify-center text-end">
-          <span className="text-xs text-foreground">Bem-vindo</span>
-          <span className="text-sm text-primary-text">{user?.name}</span>
-        </div>
-
-        <MenubarMenu>
-          <MenubarTrigger>
-            <Avatar className={`bg-accent p-3 hover:cursor-pointer`}>
-              <CircleUserRound className="size-4" />
-            </Avatar>
-          </MenubarTrigger>
-
-          <MenubarContent className="border-border shadow-lg p-0 rounded-lg -mt-3 mr-1 dark:bg-gray-900">
-            <MenubarItem className="flex p-4 hover:cursor-pointer" onClick={logout}>
-              <LogOut className="size-4" />
-              <span className="text-xs ml-2">Sair</span>
-            </MenubarItem>
-          </MenubarContent>
-        </MenubarMenu>
-      </div> */}
     </Menubar>
-  );
+  )
 }

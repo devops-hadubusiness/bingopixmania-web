@@ -23,11 +23,19 @@ export type TicketProps = {
   wins: Winner[]
 }
 
-export type CreateTicketSchema = z.infer<typeof createTicketSchema>
+export type CreateTicketsSchema = z.infer<typeof createTicketsSchema>
+export type GetUserGameTicketsSchema = z.infer<typeof getUserGameTicketsSchema>
 
 // schemas
-export const createTicketSchema = privateRouteSchema.extend({
-  userRef: z.string().uuid('Referência de usuário inválida.'),
+export const createTicketsSchema = privateRouteSchema
+  .extend({
+    gameRef: z.string().uuid('Referência de jogo inválida.'),
+    totalAmount: z.coerce.number().positive('Quantidade de cartelas inválida.'),
+    totalPrice: z.coerce.number().positive('Preço total inválido.')
+  })
+  .refine(data => data.totalAmount % data.totalPrice === 0, 'Quantidade de cartelas ou preço inválido.')
+
+export const getUserGameTicketsSchema = privateRouteSchema.extend({
   gameRef: z.string().uuid('Referência de jogo inválida.')
 })
 

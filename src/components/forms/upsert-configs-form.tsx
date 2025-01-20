@@ -67,8 +67,8 @@ export function UpsertConfigsForm({ parentLoading, configs }: UpsertConfigsFormP
       setIsLoading(true)
 
       const response = await api.post(`/`, {
-        action: 'configs',
-        ...form.getValues()
+        ...form.getValues(),
+        action: 'configs'
       })
 
       if ([HTTP_STATUS_CODE.OK, HTTP_STATUS_CODE.CREATED].includes(response.data?.statusCode)) {

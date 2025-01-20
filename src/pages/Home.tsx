@@ -21,6 +21,9 @@ export default function HomePage() {
   const [isLoading, setIsLoading] = useState<boolean>(false)
   const [context, setContext] = useState<ContextProps>('TIMER')
 
+  // TODO: verificar se tem jogo em andamento, se tiver, o context deve ser 'GAME'
+
+
   useEffect(() => {
     setIsLoading(isLoadingConfigs)
   }, [isLoadingConfigs])

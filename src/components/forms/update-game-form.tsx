@@ -68,8 +68,8 @@ export function UpdateGameForm({ parentLoading, game }: UpdateGameFormProps) {
       setIsLoading(true)
       
       const response = await api.put(`/`, {
-        action: 'game',
         ...form.getValues(),
+        action: 'game',
         dateTime: formatPTBRDateTimeToUSDateTime(form.getValues('dateTime'))
       })
 
