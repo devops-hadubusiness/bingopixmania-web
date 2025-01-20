@@ -73,7 +73,7 @@ export function BuyTicketsFormSkeleton() {
         </div>
       </div>
 
-      {/* BALANCE */}
+      {/* TICKETS */}
       <GameTicketsSection parentLoading={true} />
     </>
   )

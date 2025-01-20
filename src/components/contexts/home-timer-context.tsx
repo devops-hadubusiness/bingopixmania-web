@@ -1,5 +1,5 @@
 // packages
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 // components
 import { HomeTimer } from '@/components/timers/home-timer'

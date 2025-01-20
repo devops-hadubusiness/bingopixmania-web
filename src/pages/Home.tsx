@@ -13,16 +13,13 @@ import { useConfigs } from '@/hooks/use-configs'
 import { useAuthStore } from '@/store/auth'
 
 // types
-type ContextProps = 'TIMER' | 'GAME'
+export type HomePageContextProps = 'TIMER' | 'GAME'
 
 export default function HomePage() {
   const { user } = useAuthStore()
   const { configs, loading: isLoadingConfigs } = useConfigs(user?.ref)
   const [isLoading, setIsLoading] = useState<boolean>(false)
-  const [context, setContext] = useState<ContextProps>('TIMER')
-
-  // TODO: verificar se tem jogo em andamento, se tiver, o context deve ser 'GAME'
-
+  const [context, setContext] = useState<HomePageContextProps>('TIMER')
 
   useEffect(() => {
     setIsLoading(isLoadingConfigs)
@@ -34,7 +31,7 @@ export default function HomePage() {
         {context === 'TIMER' ? 'Simular' : 'Voltar'}
       </Button>
 
-      {context === 'TIMER' && <HomeTimerContext parentLoading={isLoading} configs={configs} />}
+      {context === 'TIMER' && <HomeTimerContext parentLoading={isLoading} configs={configs} updateContext={setContext} />}
       {context === 'GAME' && <HomeGameContext />}
     </div>
   )

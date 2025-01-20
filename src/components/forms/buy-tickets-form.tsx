@@ -7,7 +7,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 // components
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Form, FormControl, FormField, FormItem, FormMessage, FormLabel } from '@/components/ui/form'
+import { Form } from '@/components/ui/form'
 import { GameTicketsSection } from '@/components/sections/game-tickets-section'
 
 // entities
@@ -207,7 +207,7 @@ export function BuyTicketsForm({ parentLoading, configs, game }: BuyTicketsFormP
         </Form>
       </div>
 
-      {/* BALANCE */}
+      {/* TICKETS */}
       <GameTicketsSection ref={homeNextGameTicketsSectionRef} parentLoading={parentLoading} game={game} />
     </>
   )
