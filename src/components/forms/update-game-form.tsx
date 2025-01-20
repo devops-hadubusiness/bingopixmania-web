@@ -1,9 +1,10 @@
 // packages
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Check, Clock, Dices, HandCoins } from 'lucide-react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { withMask } from 'use-mask-input'
+import { format } from 'date-fns-tz'
 
 // components
 import { Input } from '@/components/ui/input'
@@ -24,38 +25,52 @@ import { useToast } from '@/hooks/use-toast'
 
 // lib
 import { api } from '@/lib/axios'
+import {showConfirm} from '@/lib/alerts'
 
 // constants
 import { HTTP_STATUS_CODE } from '@/constants/http'
 
+// utils
+import { formatPTBRDateTimeToUSDateTime, timeZone } from '@/utils/dates-util'
+
 // types
 type UpdateGameFormProps = {
+  parentLoading: boolean
   game: GameProps
 }
 
 // variables
 const loc = 'components/forms/update-game-form'
 
-export function UpdateGameForm({ game }: UpdateGameFormProps) {
+export function UpdateGameForm({ parentLoading, game }: UpdateGameFormProps) {
   const { user } = useAuthStore()
   const { toast } = useToast()
-  const [isLoading, setIsLoading] = useState<boolean>(false)
+  const [isLoading, setIsLoading] = useState<boolean>(parentLoading || false)
 
   const form = useForm<UpdateGameSchema>({
     resolver: zodResolver(updateGameSchema),
     defaultValues: {
       userRef: user?.ref,
-      ...(game || {})
+      ...(game
+        ? {
+            ...game,
+            dateTime: format(new Date(game.dateTime), 'dd/MM/yyyy HH:mm', { timeZone })
+          }
+        : {})
     }
   })
 
   async function _updateGame() {
     try {
-      setIsLoading(true)
+      const confirm = await showConfirm('Deseja confirmar?')
+      if(!confirm.isConfirmed) return
 
+      setIsLoading(true)
+      
       const response = await api.put(`/`, {
         action: 'game',
-        ...form.getValues()
+        ...form.getValues(),
+        dateTime: formatPTBRDateTimeToUSDateTime(form.getValues('dateTime'))
       })
 
       if (response.data?.statusCode === HTTP_STATUS_CODE.OK) {
@@ -85,7 +100,7 @@ export function UpdateGameForm({ game }: UpdateGameFormProps) {
                     <Clock className="size-6" />
                   </div>
 
-                  <Input {...field} ref={withMask('99/99/9999 99:99')} className="!text-center text-xl rounded-l-none" placeholder="Digite a data e hora" disabled={isLoading} />
+                  <Input {...field} ref={withMask('99/99/9999 99:99')} className="!text-center text-xl rounded-l-none" placeholder="Digite a data e hora" disabled={true || isLoading} onKeyDown={e => e.preventDefault()} />
                 </div>
               </FormControl>
 
@@ -109,10 +124,11 @@ export function UpdateGameForm({ game }: UpdateGameFormProps) {
 
                   <Select disabled={isLoading} onValueChange={value => field.onChange(value)} value={field.value}>
                     <FormControl>
-                      <SelectTrigger>
+                      <SelectTrigger className="!text-center text-xl rounded-l-none">
                         <SelectValue />
                       </SelectTrigger>
                     </FormControl>
+
                     <SelectContent>
                       {Object.entries(formatted_game_type).map(([key, value]) => (
                         <SelectItem key={key} value={key}>
@@ -141,7 +157,7 @@ export function UpdateGameForm({ game }: UpdateGameFormProps) {
                     <span className="text-background text-2xl font-bold">R$</span>
                   </div>
 
-                  <Input {...field} type="number" className="!text-center text-xl rounded-l-none" placeholder="Digite o preço" disabled={isLoading} />
+                  <Input {...field} type="number" step={0.05} min={0.05} className="!text-center text-xl rounded-l-none" placeholder="Digite o preço" disabled={isLoading} />
                 </div>
               </FormControl>
 
@@ -163,7 +179,7 @@ export function UpdateGameForm({ game }: UpdateGameFormProps) {
                     <span className="text-background text-2xl font-bold">R$</span>
                   </div>
 
-                  <Input {...field} type="number" className="!text-center text-xl rounded-l-none" placeholder="Digite o valor" disabled={isLoading} />
+                  <Input {...field} type="number" step={0.5} min={10} className="!text-center text-xl rounded-l-none" placeholder="Digite o valor" disabled={isLoading} />
                 </div>
               </FormControl>
 
@@ -185,7 +201,7 @@ export function UpdateGameForm({ game }: UpdateGameFormProps) {
                     <span className="text-background text-2xl font-bold">R$</span>
                   </div>
 
-                  <Input {...field} type="number" className="!text-center text-xl rounded-l-none" placeholder="Digite o valor" disabled={isLoading} />
+                  <Input {...field} type="number" step={0.5} min={12.5} className="!text-center text-xl rounded-l-none" placeholder="Digite o valor" disabled={isLoading} />
                 </div>
               </FormControl>
 
@@ -207,7 +223,7 @@ export function UpdateGameForm({ game }: UpdateGameFormProps) {
                     <span className="text-background text-2xl font-bold">R$</span>
                   </div>
 
-                  <Input {...field} type="number" className="!text-center text-xl rounded-l-none" placeholder="Digite o valor" disabled={isLoading} />
+                  <Input {...field} type="number" step={0.5} min={15} className="!text-center text-xl rounded-l-none" placeholder="Digite o valor" disabled={isLoading} />
                 </div>
               </FormControl>
 

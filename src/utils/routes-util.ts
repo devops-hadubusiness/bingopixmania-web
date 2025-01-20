@@ -76,7 +76,7 @@ export const routes: RouteProps[] = [
   },
   {
     name: 'Sorteio Ao Vivo',
-    path: '/home',
+    path: '/sorteio-ao-vivo',
     group: 'Jogos',
     icon: Dices,
     category: 'page',

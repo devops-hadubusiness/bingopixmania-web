@@ -70,7 +70,7 @@ export function LoginForm() {
   }
 
   useEffect(() => {
-    if (isAuthenticated) navigate('/home')
+    if (isAuthenticated) navigate('/sorteio-ao-vivo')
   }, [isAuthenticated])
 
   return (

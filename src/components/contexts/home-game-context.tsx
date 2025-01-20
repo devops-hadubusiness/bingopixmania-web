@@ -1,26 +1,26 @@
 // packages
-import { ColumnDef } from "@tanstack/react-table";
+import { ColumnDef } from '@tanstack/react-table'
 
 // components
-import { Avatar, AvatarImage } from "@/components/ui/avatar";
-import { CustomDataTable } from "@/components/table/custom-data-table";
-import { HomeBalanceCard } from "@/components/cards/home-balance-card";
+import { Avatar, AvatarImage } from '@/components/ui/avatar'
+import { CustomDataTable } from '@/components/table/custom-data-table'
+import { HomeNextGameTicketsSection } from '@/components/sections/home-next-game-tickets-section'
 
 export function HomeGameContext() {
   const columns: ColumnDef<any>[] = [
     {
-      accessorKey: "coupon",
-      header: "CUPOM",
-      cell: ({ row }) => <div>{Math.floor(Math.random() * (999999 - 100000 + 1)) + 100000}</div>,
+      accessorKey: 'coupon',
+      header: 'CUPOM',
+      cell: ({ row }) => <div>{Math.floor(Math.random() * (999999 - 100000 + 1)) + 100000}</div>
     },
     {
-      accessorKey: "donater",
-      header: "DOADOR",
-      cell: ({ row }) => <div>Francisca</div>,
+      accessorKey: 'donater',
+      header: 'DOADOR',
+      cell: ({ row }) => <div>Francisca</div>
     },
     {
-      accessorKey: "remaining",
-      header: "FALTAM",
+      accessorKey: 'remaining',
+      header: 'FALTAM',
       cell: ({ row }) => (
         <div className="flex gap-x-1">
           <div className="flex items-center justify-center p-2 rounded-md bg-primary">
@@ -36,9 +36,9 @@ export function HomeGameContext() {
             <span className="font-bold text-sm text-accent">&nbsp;</span>
           </div>
         </div>
-      ),
-    },
-  ];
+      )
+    }
+  ]
 
   return (
     <div className="flex flex-col items-center justify-center gap-y-4 p-8 max-w-[475px] min-w-[475px]">
@@ -112,37 +112,37 @@ export function HomeGameContext() {
 
         <div className="flex flex-col gap-y-[1.5px] py-2 px-1 bg-primary/50 rounded-lg w-full">
           <div className="flex justify-end w-full gap-x-[1px]">
-            {new Array(15).fill(" ").map((_, i) => (
+            {new Array(15).fill(' ').map((_, i) => (
               <span className="bg-accent px-2 py-1 rounded-sm text-muted-foreground text-[8px] font-bold text-center w-[6.66%]">{i + 1}</span>
             ))}
           </div>
 
           <div className="flex justify-end w-full gap-x-[1px]">
-            {new Array(15).fill(" ").map((_, i) => (
+            {new Array(15).fill(' ').map((_, i) => (
               <span className="bg-accent px-2 py-1 rounded-sm text-muted-foreground text-[8px] font-bold text-center w-[6.66%]">{i + 16}</span>
             ))}
           </div>
 
           <div className="flex justify-end w-full gap-x-[1px]">
-            {new Array(15).fill(" ").map((_, i) => (
+            {new Array(15).fill(' ').map((_, i) => (
               <span className="bg-accent px-2 py-1 rounded-sm text-muted-foreground text-[8px] font-bold text-center w-[6.66%]">{i + 31}</span>
             ))}
           </div>
 
           <div className="flex justify-end w-full gap-x-[1px]">
-            {new Array(15).fill(" ").map((_, i) => (
+            {new Array(15).fill(' ').map((_, i) => (
               <span className="bg-accent px-2 py-1 rounded-sm text-muted-foreground text-[8px] font-bold text-center w-[6.66%]">{i + 46}</span>
             ))}
           </div>
 
           <div className="flex justify-end w-full gap-x-[1px]">
-            {new Array(15).fill(" ").map((_, i) => (
+            {new Array(15).fill(' ').map((_, i) => (
               <span className="bg-accent px-2 py-1 rounded-sm text-muted-foreground text-[8px] font-bold text-center w-[6.66%]">{i + 61}</span>
             ))}
           </div>
 
           <div className="flex justify-end w-full gap-x-[1px]">
-            {new Array(15).fill(" ").map((_, i) => (
+            {new Array(15).fill(' ').map((_, i) => (
               <span className="bg-accent px-2 py-1 rounded-sm text-muted-foreground text-[8px] font-bold text-center w-[6.66%]">{i + 76}</span>
             ))}
           </div>
@@ -160,7 +160,7 @@ export function HomeGameContext() {
 
         <div className="flex w-full gap-x-0.5">
           <div className="flex flex-col gap-y-0.5 flex-grow h-full">
-            {new Array(10).fill(" ").map((_, i) => (
+            {new Array(10).fill(' ').map((_, i) => (
               <div className="bg-foreground rounded-md px-4 py-1 w-full flex items-center justify-center h-full">
                 <span className="text-xs font-bold text-red-500">{Math.floor(Math.random() * (999999 - 100000 + 1)) + 100000}</span>
               </div>
@@ -168,7 +168,7 @@ export function HomeGameContext() {
           </div>
 
           <div className="flex flex-col gap-y-0.5 flex-grow h-full">
-            {new Array(10).fill(" ").map((_, i) => (
+            {new Array(10).fill(' ').map((_, i) => (
               <div className="bg-foreground rounded-md px-4 py-1 w-full flex items-center justify-center h-full">
                 <span className="text-xs font-bold text-background">Francisca Maria</span>
               </div>
@@ -176,7 +176,7 @@ export function HomeGameContext() {
           </div>
 
           <div className="flex flex-col gap-y-0.5 w-5/12 h-full">
-            {new Array(10).fill(" ").map((_, i) => (
+            {new Array(10).fill(' ').map((_, i) => (
               <div className="flex gap-x-1">
                 <div className="flex items-center justify-center p-2 rounded-md bg-primary-text w-[20%]">
                   <span className="font-bold text-xs text-primary-foreground">{Math.floor(Math.random() * (99 - 1 + 1)) + 1}</span>
@@ -199,7 +199,7 @@ export function HomeGameContext() {
         </div>
       </div>
 
-      <HomeBalanceCard />
+      <HomeNextGameTicketsSection />
     </div>
-  );
+  )
 }

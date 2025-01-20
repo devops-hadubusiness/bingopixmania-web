@@ -153,6 +153,23 @@ body {
     & *:not(.not-skeleton) {
       @apply !bg-zinc-500 rounded-lg text-transparent border-none;
     }
+
+    & *.skeleton-hidden {
+      @apply hidden;
+    }
+  }
+
+  .skeleton-no-bg {
+    @apply animate-pulse bg-zinc-700 rounded-lg text-transparent;
+    background-color: inherit !important;
+
+    & *:not(.not-skeleton) {
+      @apply !bg-zinc-500 rounded-lg text-transparent border-none;
+    }
+
+    & *.skeleton-hidden {
+      @apply hidden;
+    }
   }
 
   ::-webkit-scrollbar {

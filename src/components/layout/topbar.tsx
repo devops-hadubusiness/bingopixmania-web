@@ -49,8 +49,8 @@ export default function Topbar(): JSX.Element {
       })
       .filter((p) => !!p.name);
 
-    if (paths?.at(0)?.path === "/home") return paths;
-    return [{ name: "Home", path: "/home" }].concat(paths);
+    if (paths?.at(0)?.path === "/sorteio-ao-vivo") return paths;
+    return [{ name: "Sorteio Ao Vivo", path: "/sorteio-ao-vivo" }].concat(paths);
   };
 
   useEffect(() => {
@@ -77,8 +77,8 @@ export default function Topbar(): JSX.Element {
       </div>
 
       <div className="smAndDown:hidden flex items-center justify-center h-full gap-2">
-        <Button variant="default" className="bg-success hover:bg-success hover:brightness-125 flex items-center gap-2" onClick={() => navigate(activeRoute === "/home" ? "/depositar" : "/home")}>
-          {activeRoute === "/home" ? "Depositar" : "Jogo ao Vivo"}
+        <Button variant="default" className="bg-success hover:bg-success hover:brightness-125 flex items-center gap-2" onClick={() => navigate(activeRoute === "/sorteio-ao-vivo" ? "/depositar" : "/sorteio-ao-vivo")}>
+          {activeRoute === "/sorteio-ao-vivo" ? "Depositar" : "Sorteio ao Vivo"}
         </Button>
 
         {routes

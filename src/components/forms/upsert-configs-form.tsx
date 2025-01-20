@@ -22,22 +22,24 @@ import { useToast } from '@/hooks/use-toast'
 
 // lib
 import { api } from '@/lib/axios'
+import { showConfirm } from '@/lib/alerts'
 
 // constants
 import { HTTP_STATUS_CODE } from '@/constants/http'
 
 // types
 type UpsertConfigsFormProps = {
+  parentLoading: boolean
   configs?: ConfigProps
 }
 
 // variables
 const loc = 'components/forms/upsert-configs-form'
 
-export function UpsertConfigsForm({ configs }: UpsertConfigsFormProps) {
+export function UpsertConfigsForm({ parentLoading, configs }: UpsertConfigsFormProps) {
   const { user } = useAuthStore()
   const { toast } = useToast()
-  const [isLoading, setIsLoading] = useState<boolean>(false)
+  const [isLoading, setIsLoading] = useState<boolean>(parentLoading || false)
 
   const form = useForm<UpsertConfigsSchema>({
     resolver: zodResolver(upsertConfigsSchema),
@@ -59,6 +61,9 @@ export function UpsertConfigsForm({ configs }: UpsertConfigsFormProps) {
 
   async function _upsertConfigs() {
     try {
+      const confirm = await showConfirm('Deseja confirmar?')
+      if (!confirm.isConfirmed) return
+
       setIsLoading(true)
 
       const response = await api.post(`/`, {
