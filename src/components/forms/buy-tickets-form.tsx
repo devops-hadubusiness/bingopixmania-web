@@ -80,7 +80,7 @@ export function BuyTicketsForm({ parentLoading, configs, game }: BuyTicketsFormP
         showSuccess('Cartelas compradas com sucesso')
         udpateUserBalance(response.data.body[0].balance)
         form.reset()
-        if (homeNextGameTicketsSectionRef.current) await homeNextGameTicketsSectionRef.current?.fetchUserNextGameTickets()
+        if (homeNextGameTicketsSectionRef.current) await homeNextGameTicketsSectionRef.current.fetchUserNextGameTickets()
       } else toast({ variant: 'destructive', title: 'Ops ...', description: response.data?.statusMessage || 'Não foi possível comprar as cartelas.' })
     } catch (err) {
       console.error(`Unhandled rejection at ${loc}._buyTickets function. Details: ${err}`)

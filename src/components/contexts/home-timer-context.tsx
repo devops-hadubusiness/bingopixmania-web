@@ -1,6 +1,3 @@
-// packages
-import { useEffect, useState } from 'react'
-
 // components
 import { HomeTimer } from '@/components/timers/home-timer'
 import { HomeNextGameSection } from '@/components/sections/home-next-game-section'
@@ -18,13 +15,13 @@ import { cn } from '@/lib/utils'
 type HomeTimerContextProps = {
   parentLoading: boolean
   configs?: ConfigProps
+  nextGame?: GameProps
 }
 
 // variables
 const loc = `@/components/contexts/home-timer-context`
 
-export function HomeTimerContext({ parentLoading, configs }: HomeTimerContextProps) {
-  const [nextGame, setNextGame] = useState<GameProps | undefined>()
+export function HomeTimerContext({ parentLoading, configs, nextGame }: HomeTimerContextProps) {
 
   return (
     <div className={cn('flex flex-col items-center justify-center gap-y-4 p-8 smAndDown:min-w-screen smAndDown:max-w-screen mdAndUp:max-w-[475px] mdAndUp:min-w-[475px]')}>
@@ -34,7 +31,7 @@ export function HomeTimerContext({ parentLoading, configs }: HomeTimerContextPro
         <HomeTimer parentLoading={parentLoading} configs={configs} />
 
         {/* NEXT GAME */}
-        <HomeNextGameSection parentLoading={parentLoading} updateNextGame={setNextGame} />
+        <HomeNextGameSection parentLoading={parentLoading} nextGame={nextGame} />
       </div>
 
       {/* BUY */}

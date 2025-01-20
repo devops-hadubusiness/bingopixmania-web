@@ -13,7 +13,7 @@ import { HTTP_STATUS_CODE } from '@/constants/http'
 import { useToast } from '@/hooks/use-toast'
 
 // variables
-const loc = `@/utils/configs-util`
+const loc = `@/hooks/use-configs`
 
 const useConfigs = (userRef?: string) => {
   const { toast } = useToast()

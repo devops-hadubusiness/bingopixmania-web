@@ -1,12 +1,33 @@
 // packages
+import { forwardRef, useImperativeHandle } from 'react'
 import { ColumnDef } from '@tanstack/react-table'
+import { format } from 'date-fns-tz'
 
 // components
 import { Avatar, AvatarImage } from '@/components/ui/avatar'
 import { CustomDataTable } from '@/components/table/custom-data-table'
 import { GameTicketsSection } from '@/components/sections/game-tickets-section'
 
-export function HomeGameContext() {
+// entities
+import { GameProps } from '@/entities/game/game'
+import { WinnerProps, winner_prize_type } from '@/entities/winner/winner'
+
+// utils
+import { formatBRL } from '@/utils/currencies-util'
+import { timeZone } from '@/utils/dates-util'
+import { getNumberClasses } from '@/utils/games-util'
+
+// lib
+import { cn } from '@/lib/utils'
+
+// types
+type HomeGameContextProps = {
+  parentLoading: boolean
+  game: GameProps
+  winners: WinnerProps[]
+}
+
+export function HomeGameContext({ parentLoading, game, winners }: HomeGameContextProps) {
   const columns: ColumnDef<any>[] = [
     {
       accessorKey: 'coupon',
@@ -40,23 +61,27 @@ export function HomeGameContext() {
     }
   ]
 
+  const _hasWinner = (prizeType: winner_prize_type) => {
+    return winners.some(w => w.prizeType === prizeType)
+  }
+
   return (
     <div className="flex flex-col items-center justify-center gap-y-4 p-8 max-w-[475px] min-w-[475px]">
       {/* PRIZES */}
       <div className="flex gap-x-4 w-full">
-        <div className="flex flex-col items-center justify-center gap-y-2 rounded-md border border-primary-text p-2 w-1/3 bg-primary/50">
-          <span className="w-full text-center bg-primary-text text-primary-foreground rounded-lg text-xs font-bold">Prêmio 1</span>
-          <span className="text-primary-foreground rounded-lg text-xs">R$ 20,00</span>
+        <div className={cn('flex flex-col items-center justify-center gap-y-2 rounded-md p-2 w-1/3', _hasWinner(winner_prize_type.FIRST) ? 'bg-primary/50 border border-primary-text' : 'bg-accent')}>
+          <span className={cn('w-full text-center text-primary-foreground rounded-lg text-xs font-bold', _hasWinner(winner_prize_type.FIRST) && 'bg-primary-text')}>Prêmio 1</span>
+          <span className={cn('text-primary-foreground rounded-lg text-xs', (parentLoading || !game?.firstPrizeValue) && 'skeleton')}>{formatBRL(game.firstPrizeValue)}</span>
         </div>
 
-        <div className="flex flex-col items-center justify-center gap-y-2 rounded-md p-2 w-1/3 bg-accent">
-          <span className="w-full text-center text-primary-foreground rounded-lg text-xs font-bold">Prêmio 2</span>
-          <span className="text-primary-foreground rounded-lg text-xs">R$ 30,00</span>
+        <div className={cn('flex flex-col items-center justify-center gap-y-2 rounded-md p-2 w-1/3', _hasWinner(winner_prize_type.SECOND) ? 'bg-primary/50' : 'bg-accent')}>
+          <span className={cn('w-full text-center text-primary-foreground rounded-lg text-xs font-bold', _hasWinner(winner_prize_type.SECOND) && 'bg-primary-text')}>Prêmio 2</span>
+          <span className={cn('text-primary-foreground rounded-lg text-xs', (parentLoading || !game?.secondPrizeValue) && 'skeleton')}>{formatBRL(game.secondPrizeValue)}</span>
         </div>
 
-        <div className="flex flex-col items-center justify-center gap-y-2 rounded-md p-2 w-1/3 bg-accent">
-          <span className="w-full text-center text-primary-foreground rounded-lg text-xs font-bold">Prêmio 3</span>
-          <span className="text-primary-foreground rounded-lg text-xs">R$ 60,00</span>
+        <div className={cn('flex flex-col items-center justify-center gap-y-2 rounded-md p-2 w-1/3', _hasWinner(winner_prize_type.THIRD) ? 'bg-primary/50' : 'bg-accent')}>
+          <span className={cn('w-full text-center text-primary-foreground rounded-lg text-xs font-bold', _hasWinner(winner_prize_type.THIRD) && 'bg-primary-text')}>Prêmio 3</span>
+          <span className={cn('text-primary-foreground rounded-lg text-xs', (parentLoading || !game?.thirdPrizeValue) && 'skeleton')}>{formatBRL(game.thirdPrizeValue)}</span>
         </div>
       </div>
 
@@ -66,84 +91,99 @@ export function HomeGameContext() {
         <div className="flex flex-col gap-y-2 h-full flex-grow">
           <div className="w-full flex flex-col items-center justify-center gap-y-2 rounded-md border border-primary-text p-2 bg-primary/50">
             <span className="w-full text-center bg-primary-text text-primary-foreground rounded-lg text-xs font-bold">Sorteio</span>
-            <span className="text-primary-foreground rounded-lg text-xs">003702</span>
+            <span className={cn('text-primary-foreground rounded-lg text-xs', (parentLoading || !game?.id) && 'skeleton')}>{String(game?.id).padStart(6, '0')}</span>
           </div>
 
           <div className="w-full flex flex-col items-center justify-center gap-y-2 rounded-md border border-primary-text p-2 bg-primary/50">
             <span className="w-full text-center bg-primary-text text-primary-foreground rounded-lg text-xs font-bold">Doação</span>
-            <span className="text-primary-foreground rounded-lg text-xs">R$ 0,10</span>
+            <span className={cn('text-primary-foreground rounded-lg text-xs', (parentLoading || !game?.ticketPrice) && 'skeleton')}>{formatBRL(game.ticketPrice)}</span>
           </div>
 
           <div className="w-full flex flex-col items-center justify-center gap-y-2 rounded-md border border-primary-text p-2 bg-primary/50">
             <span className="w-full text-center bg-primary-text text-primary-foreground rounded-lg text-xs font-bold">Data</span>
-            <span className="text-primary-foreground rounded-lg text-xs">22/12/2024</span>
+            <span className={cn('text-primary-foreground rounded-lg text-xs', (parentLoading || !game?.dateTime) && 'skeleton')}>{format(new Date(game.dateTime), 'dd/MM/yyyy', { timeZone })}</span>
           </div>
 
           <div className="w-full flex flex-col items-center justify-center gap-y-2 rounded-md border border-primary-text p-2 bg-primary/50">
             <span className="w-full text-center bg-primary-text text-primary-foreground rounded-lg text-xs font-bold">Hora</span>
-            <span className="text-primary-foreground rounded-lg text-xs">15:50:00</span>
+            <span className={cn('text-primary-foreground rounded-lg text-xs', (parentLoading || !game?.dateTime) && 'skeleton')}>{format(new Date(game.dateTime), 'HH:mm:ss', { timeZone })}</span>
           </div>
         </div>
 
         {/* BALL */}
         <div className="flex items-center justify-center h-full flex-grow">
-          <img src="/images/misc/bolas/bola-66.png" className="size-48" />
+          <Avatar className={cn('size-48 border-2 border-primary-foreground rounded-full', game.balls?.at(-1) && 'bg-foreground')}>
+            {/* <img src={`/images/misc/balls/bola-${game.balls?.length ? game.balls.at(-1) : 'vazia'}.png`} className="size-48" /> */}
+            <AvatarImage src={`/images/misc/balls/bola-${game.balls.at(-1) ?? 'vazia'}.png`} />
+          </Avatar>
         </div>
 
         {/* BALLS */}
         <div className="flex flex-col items-center gap-y-4 h-full flex-grow">
-          <Avatar className="size-16 border-2 border-primary-foreground rounded-full">
-            <AvatarImage src="/images/misc/bolas/bola-vazia.png" />
+          <Avatar className={cn('size-16 border-2 border-primary-foreground rounded-full', game.balls?.at(-2) && 'bg-foreground')}>
+            <AvatarImage src={`/images/misc/balls/bola-${game.balls.at(-2) ?? 'vazia'}.png`} />
           </Avatar>
 
-          <Avatar className="size-12 border-2 border-primary-foreground rounded-full">
-            <AvatarImage src="/images/misc/bolas/bola-vazia.png" />
+          <Avatar className={cn('size-12 border-2 border-primary-foreground rounded-full', game.balls?.at(-3) && 'bg-foreground')}>
+            <AvatarImage src={`/images/misc/balls/bola-${game.balls.at(-3) ?? 'vazia'}.png`} />
           </Avatar>
 
-          <Avatar className="size-9 border-2 border-primary-foreground rounded-full">
-            <AvatarImage src="/images/misc/bolas/bola-vazia.png" />
+          <Avatar className={cn('size-9 border-2 border-primary-foreground rounded-full', game.balls?.at(-4) && 'bg-foreground')}>
+            <AvatarImage src={`/images/misc/balls/bola-${game.balls.at(-4) ?? 'vazia'}.png`} />
           </Avatar>
         </div>
       </div>
 
       {/* CARDS */}
       <div className="flex flex-col gap-y-2 w-full items-end">
-        <span className="text-primary-text text-sm font-bold">ORDEM 1</span>
+        <span className="text-primary-text text-sm font-bold">ORDEM {game.balls?.length || 0}</span>
 
         <div className="flex flex-col gap-y-[1.5px] py-2 px-1 bg-primary/50 rounded-lg w-full">
           <div className="flex justify-end w-full gap-x-[1px]">
-            {new Array(15).fill(' ').map((_, i) => (
-              <span className="bg-accent px-2 py-1 rounded-sm text-muted-foreground text-[8px] font-bold text-center w-[6.66%]">{i + 1}</span>
+            {Array.from({ length: 15 }, (_, i) => (
+              <span key={i} className={cn('px-2 py-1 rounded-sm text-[8px] font-bold text-center w-[6.66%]', getNumberClasses(game.balls, String(i + 1), game.status))}>
+                {i + 1}
+              </span>
             ))}
           </div>
 
           <div className="flex justify-end w-full gap-x-[1px]">
-            {new Array(15).fill(' ').map((_, i) => (
-              <span className="bg-accent px-2 py-1 rounded-sm text-muted-foreground text-[8px] font-bold text-center w-[6.66%]">{i + 16}</span>
+            {Array.from({ length: 15 }, (_, i) => (
+              <span key={i + 16} className={cn('px-2 py-1 rounded-sm text-[8px] font-bold text-center w-[6.66%]', getNumberClasses(game.balls, String(i + 16), game.status))}>
+                {i + 16}
+              </span>
             ))}
           </div>
 
           <div className="flex justify-end w-full gap-x-[1px]">
-            {new Array(15).fill(' ').map((_, i) => (
-              <span className="bg-accent px-2 py-1 rounded-sm text-muted-foreground text-[8px] font-bold text-center w-[6.66%]">{i + 31}</span>
+            {Array.from({ length: 15 }, (_, i) => (
+              <span key={i + 31} className={cn('px-2 py-1 rounded-sm text-[8px] font-bold text-center w-[6.66%]', getNumberClasses(game.balls, String(i + 31), game.status))}>
+                {i + 31}
+              </span>
             ))}
           </div>
 
           <div className="flex justify-end w-full gap-x-[1px]">
-            {new Array(15).fill(' ').map((_, i) => (
-              <span className="bg-accent px-2 py-1 rounded-sm text-muted-foreground text-[8px] font-bold text-center w-[6.66%]">{i + 46}</span>
+            {Array.from({ length: 15 }, (_, i) => (
+              <span key={i + 46} className={cn('px-2 py-1 rounded-sm text-[8px] font-bold text-center w-[6.66%]', getNumberClasses(game.balls, String(i + 46), game.status))}>
+                {i + 46}
+              </span>
             ))}
           </div>
 
           <div className="flex justify-end w-full gap-x-[1px]">
-            {new Array(15).fill(' ').map((_, i) => (
-              <span className="bg-accent px-2 py-1 rounded-sm text-muted-foreground text-[8px] font-bold text-center w-[6.66%]">{i + 61}</span>
+            {Array.from({ length: 15 }, (_, i) => (
+              <span key={i + 61} className={cn('px-2 py-1 rounded-sm text-[8px] font-bold text-center w-[6.66%]', getNumberClasses(game.balls, String(i + 61), game.status))}>
+                {i + 61}
+              </span>
             ))}
           </div>
 
           <div className="flex justify-end w-full gap-x-[1px]">
-            {new Array(15).fill(' ').map((_, i) => (
-              <span className="bg-accent px-2 py-1 rounded-sm text-muted-foreground text-[8px] font-bold text-center w-[6.66%]">{i + 76}</span>
+            {Array.from({ length: 15 }, (_, i) => (
+              <span key={i + 76} className={cn('px-2 py-1 rounded-sm text-[8px] font-bold text-center w-[6.66%]', getNumberClasses(game.balls, String(i + 76), game.status))}>
+                {i + 76}
+              </span>
             ))}
           </div>
         </div>
@@ -160,36 +200,40 @@ export function HomeGameContext() {
 
         <div className="flex w-full gap-x-0.5">
           <div className="flex flex-col gap-y-0.5 flex-grow h-full">
-            {new Array(10).fill(' ').map((_, i) => (
-              <div className="bg-foreground rounded-md px-4 py-1 w-full flex items-center justify-center h-full">
+            {Array.from({ length: 10 }, (_, i) => (
+              <div key={i} className="bg-foreground rounded-md px-4 py-1 w-full flex items-center justify-center h-full">
                 <span className="text-xs font-bold text-red-500">{Math.floor(Math.random() * (999999 - 100000 + 1)) + 100000}</span>
               </div>
             ))}
           </div>
 
           <div className="flex flex-col gap-y-0.5 flex-grow h-full">
-            {new Array(10).fill(' ').map((_, i) => (
-              <div className="bg-foreground rounded-md px-4 py-1 w-full flex items-center justify-center h-full">
+            {Array.from({ length: 10 }, (_, i) => (
+              <div key={i + 10} className="bg-foreground rounded-md px-4 py-1 w-full flex items-center justify-center h-full">
                 <span className="text-xs font-bold text-background">Francisca Maria</span>
               </div>
             ))}
           </div>
 
           <div className="flex flex-col gap-y-0.5 w-5/12 h-full">
-            {new Array(10).fill(' ').map((_, i) => (
-              <div className="flex gap-x-1">
+            {Array.from({ length: 10 }, (_, i) => (
+              <div key={i + 20} className="flex gap-x-1">
                 <div className="flex items-center justify-center p-2 rounded-md bg-primary-text w-[20%]">
                   <span className="font-bold text-xs text-primary-foreground">{Math.floor(Math.random() * (99 - 1 + 1)) + 1}</span>
                 </div>
+
                 <div className="flex items-center justify-center p-2 rounded-md bg-primary-text w-[20%]">
                   <span className="font-bold text-xs text-primary-foreground">{Math.floor(Math.random() * (99 - 1 + 1)) + 1}</span>
                 </div>
+
                 <div className="flex items-center justify-center p-2 rounded-md bg-primary-text w-[20%]">
                   <span className="font-bold text-xs text-primary-foreground">{Math.floor(Math.random() * (99 - 1 + 1)) + 1}</span>
                 </div>
+
                 <div className="flex items-center justify-center p-2 rounded-md bg-muted-foreground w-[20%]">
                   <span className="font-bold text-xs text-accent">&nbsp;</span>
                 </div>
+
                 <div className="flex items-center justify-center p-2 rounded-md bg-muted-foreground w-[20%]">
                   <span className="font-bold text-xs text-accent">&nbsp;</span>
                 </div>
@@ -199,7 +243,7 @@ export function HomeGameContext() {
         </div>
       </div>
 
-      <GameTicketsSection />
+      <GameTicketsSection parentLoading={parentLoading} game={game} />
     </div>
   )
 }

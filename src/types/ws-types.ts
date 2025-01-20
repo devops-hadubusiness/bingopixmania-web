@@ -5,3 +5,5 @@ export type WSGameEventProps = {
   action: WSGameEventActionProps
   data?: string
 }
+
+export type WSChannelMessageTypeProps = 'MESSAGE' | 'ERROR'

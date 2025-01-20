@@ -23,6 +23,7 @@ import { routes, checkRoutePermission } from '@/utils/routes-util'
 // contexts
 import { ThemeProvider, useTheme } from '@/contexts/ThemeContext'
 import { StoreContext, StoreProvider } from '@/contexts/StoreContext'
+import { WebSocketProvider } from '@/contexts/WebSocketContext'
 
 // store
 import { useAuthStore } from '@/store/auth'
@@ -103,8 +104,10 @@ export default function AppWrapper() {
             <AuthProvider>
               <AuthGuard>
                 <SidebarProvider>
-                  <Toaster />
-                  <App />
+                  <WebSocketProvider>
+                    <Toaster />
+                    <App />
+                  </WebSocketProvider>
                 </SidebarProvider>
               </AuthGuard>
             </AuthProvider>

@@ -1,10 +1,5 @@
 // packages
-import { useEffect, useState, forwardRef, useImperativeHandle, Fragment } from 'react'
-import { Minus, Plus } from 'lucide-react'
-
-// components
-import { Button } from '@/components/ui/button'
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
+import { useEffect, useState, forwardRef, useImperativeHandle } from 'react'
 
 // entities
 import { GetUserGameTicketsSchema, TicketProps } from '@/entities/ticket/ticket'
@@ -25,6 +20,7 @@ import { useToast } from '@/hooks/use-toast'
 
 // utils
 import { formatBRL } from '@/utils/currencies-util'
+import { getNumberClasses } from '@/utils/games-util'
 
 // types
 type HomeNextGameTicketsProps = {
@@ -53,7 +49,6 @@ const GameTicketsSection = forwardRef(({ parentLoading, game }: HomeNextGameTick
         } as GetUserGameTicketsSchema
       })
 
-      console.log(response.data.body)
       if (response.data?.statusCode === HTTP_STATUS_CODE.OK) setTickets(response.data.body)
       else toast({ variant: 'destructive', title: 'Ops ...', description: response.data?.statusMessage || 'Não foi possível buscar suas cartelas do próximo jogo.' })
     } catch (err) {
@@ -64,15 +59,6 @@ const GameTicketsSection = forwardRef(({ parentLoading, game }: HomeNextGameTick
     }
   }
 
-  const _getNumberClasses = (number: string) => {
-    if (game.balls?.includes(number)) {
-      if (game.balls?.at(-1) === number) return 'bg-rose-700 text-primary-foreground'
-      return 'bg-success text-primary-foreground'
-    }
-
-    return 'bg-background text-muted-foreground'
-  }
-
   useEffect(() => {
     setIsLoading(parentLoading)
   }, [parentLoading])
@@ -80,7 +66,7 @@ const GameTicketsSection = forwardRef(({ parentLoading, game }: HomeNextGameTick
   useEffect(() => {
     if (game && !tickets.length) _fetchUserNextGameTickets()
     else setTickets([])
-  }, [game])
+  }, [game?.ref])
 
   useImperativeHandle(ref, () => ({
     fetchUserNextGameTickets: _fetchUserNextGameTickets
@@ -110,7 +96,7 @@ const GameTicketsSection = forwardRef(({ parentLoading, game }: HomeNextGameTick
 
               <div className="flex w-full justify-end">
                 {t.numbers.slice(0, 5).map((n, j) => (
-                  <span key={j} className={cn('w-1/5 py-1 text-[8px] font-bold text-center border border-primary-text', _getNumberClasses(n))}>
+                  <span key={j} className={cn('w-1/5 py-1 text-[8px] font-bold text-center border border-primary-text', getNumberClasses(game.balls, n, game.status))}>
                     {n}
                   </span>
                 ))}
@@ -118,7 +104,7 @@ const GameTicketsSection = forwardRef(({ parentLoading, game }: HomeNextGameTick
 
               <div className="flex w-full justify-end">
                 {t.numbers.slice(5, 10).map((n, j) => (
-                  <span key={j} className={cn('w-1/5 py-1 text-[8px] font-bold text-center border border-primary-text', _getNumberClasses(n))}>
+                  <span key={j} className={cn('w-1/5 py-1 text-[8px] font-bold text-center border border-primary-text', getNumberClasses(game.balls, n, game.status))}>
                     {n}
                   </span>
                 ))}
@@ -126,7 +112,7 @@ const GameTicketsSection = forwardRef(({ parentLoading, game }: HomeNextGameTick
 
               <div className="flex w-full justify-end">
                 {t.numbers.slice(10).map((n, j) => (
-                  <span key={j} className={cn('w-1/5 py-1 text-[8px] font-bold text-center border border-primary-text', _getNumberClasses(n))}>
+                  <span key={j} className={cn('w-1/5 py-1 text-[8px] font-bold text-center border border-primary-text', getNumberClasses(game.balls, n, game.status))}>
                     {n}
                   </span>
                 ))}
