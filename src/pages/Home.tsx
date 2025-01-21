@@ -13,6 +13,7 @@ import { WinnerProps } from '@/entities/winner/winner'
 
 // hooks
 import { useConfigs } from '@/hooks/use-configs'
+import { useWaitForStateUpdate } from '@/hooks/use-wait-for-state-update'
 
 // contexts
 import { useWebSocket } from '@/contexts/WebSocketContext'
@@ -37,6 +38,7 @@ export type ContextProps = 'TIMER' | 'GAME'
 
 // variables
 const loc = `@/pages/Home`
+const baseWsChannelName = `${import.meta.env.VITE_APP_NAME}-${import.meta.env.VITE_NODE_ENV}-game`
 
 export default function HomePage() {
   const { user } = useAuthStore()
@@ -53,44 +55,24 @@ export default function HomePage() {
   const [isShowingLoadingAlert, setIsShowingLoadingAlert] = useState<boolean>(false)
   const [isShowingWinnersAlert, setIsShowingWinnersAlert] = useState<boolean>(false)
   const [winners, setWinners] = useState<WinnerProps[]>([])
+  const waitForWsChannelNameUpdate = useWaitForStateUpdate(wsChannel?.name)
 
   // TODO: remover
-  const _handleTest = async () => {
-    try {
-      // TODO: testar inverter a ordem
-      await api.post('/test')
-      setChannel({ channelName: 'test', cb: (type, msg) => console.log(`TYPE: ${type}\nMSG:${JSON.stringify(msg, null, 2)}`) })
-
-      // TODO: abaixo está funcionando
-      /* const ably = new Realtime({ key: import.meta.env.VITE_WS_API_KEY })
-
-      ably.connection.on('connected', async () => {
-        console.log(`Connected to WebSocket.`)
-
-        const channel = ably.channels.get('test')
-
-        channel.on('attached', () => {
-          console.log(`Connected to WebSocket Channel 'test'.`)
-          // channel.subscribe('message', (msg) => console.log(JSON.stringify(msg)))
-        })
-
-        await channel.subscribe('message', (msg) => console.log(JSON.stringify(msg)))
-      }) */
-    } catch (err) {
-      console.error(err)
-    }
-  }
-
-  // TODO: remover
-  /* const _handleStartNextGame = async () => {
+  const _handleStartNextGame = async () => {
     try {
       setIsLoading(true)
+
+      // assigning to ws placeholder event channel before call the api
+      await _assignWSChannelEvents(`${baseWsChannelName}-placeholder`)
+
+      // waiting for ws channel connection
+      await waitForWsChannelNameUpdate()
 
       const response = await api.post(`/start-next-game`)
 
       if (response.data?.statusCode === HTTP_STATUS_CODE.OK) {
         toast({ variant: 'success', title: 'Sucesso', description: 'Jogo iniciado com sucesso.' })
-        await Promise.all([_fetchCurrentGame(), _fetchNextGame()])
+        // await Promise.all([_fetchCurrentGame(), _fetchNextGame()])
       } else toast({ variant: 'destructive', title: 'Ops ...', description: 'Não foi possível iniciar o jogo.' })
     } catch (err) {
       console.error(`Unhandled rejection at ${loc}._handleStartNextGame function. Details: ${err}`)
@@ -98,10 +80,12 @@ export default function HomePage() {
     } finally {
       setIsLoading(false)
     }
-  } */
+  }
 
-  /* const _fetchCurrentGame = async () => {
+  const _fetchCurrentGame = async (/* refetch: boolean */) => {
     try {
+      // if(!refetch && currentGame) return // refetching only when necessary to update the currentGameInstance
+
       setIsLoading(true)
 
       const response = await api.get(`/`, {
@@ -123,9 +107,9 @@ export default function HomePage() {
     } finally {
       setIsLoading(false)
     }
-  } */
+  }
 
-  /* const _fetchNextGame = async () => {
+  const _fetchNextGame = async () => {
     try {
       setIsLoading(true)
 
@@ -138,7 +122,7 @@ export default function HomePage() {
 
       if (response.data?.statusCode === HTTP_STATUS_CODE.OK) setNextGame(response.data.body[0])
       else {
-        // toast({ variant: 'destructive', title: 'Ops ...', description: response.data?.statusMessage || 'Não foi possível buscar o próximo jogo.' })
+        if (import.meta.env.VITE_NODE_ENV != 'development') toast({ variant: 'destructive', title: 'Ops ...', description: response.data?.statusMessage || 'Não foi possível buscar o próximo jogo.' })
         if (nextGame) setNextGame(undefined) // reseting data
       }
     } catch (err) {
@@ -148,14 +132,16 @@ export default function HomePage() {
     } finally {
       setIsLoading(false)
     }
-  } */
+  }
 
-  /* const _assignWSChannelEvents = async (channelName: string) => {
+  const _assignWSChannelEvents = async (channelName: string) => {
     console.log('CHAMOU: ', channelName)
     setChannel({ channelName, cb: _channelCb })
-  } */
+  }
 
-  /* const _unassignWSChannelEvents = async (channelName: string) => {
+  const _unassignWSChannelEvents = async (channelName: string) => {
+    console.warn(`============== TIRANDO OS EVENTOS ===============`) // TODO: remover
+
     try {
       if (wsChannel?.state === 'attached' && wsChannel?.name === channelName) {
         wsChannel.unsubscribe('message')
@@ -167,19 +153,17 @@ export default function HomePage() {
       console.error(`Unhandled rejection at ${loc}._unassignWSChannelEvents function. Details: ${err}`)
       toast({ variant: 'destructive', title: 'Ops ...', description: 'Não foi possível desanexar os eventos do servidor de WebSocket.' })
     }
-  } */
+  }
 
-  /* const _channelCb = async (type: WSChannelMessageTypeProps, msg: string) => {
+  const _channelCb = async (type: WSChannelMessageTypeProps, msg: string) => {
     try {
-      console.log('MSG RECEBIDA: ', type, msg) // TODO: remover
-
       if (type === 'ERROR') {
         toast({ variant: 'destructive', title: 'Ops ...', description: msg || 'Ocorreu um erro na comunicação com o servidor de jogo.' })
         return
       } else if (type === 'MESSAGE') {
         const parsedMsg: WSGameEventProps = typeof msg === 'string' ? JSON.parse(msg || '{}') : msg
 
-        switch (parsedMsg.action) {
+        switch (parsedMsg?.action) {
           case WS_GAME_EVENTS.GAME_STARTED:
             if (!isShowingLoadingAlert) setIsShowingLoadingAlert(true)
 
@@ -231,7 +215,7 @@ export default function HomePage() {
       console.error(`Unhandled rejection at ${loc}._channelCb function. Details: ${err}`)
       toast({ variant: 'destructive', title: 'Ops ...', description: 'Não foi possível receber o evento.' })
     }
-  } */
+  }
 
   useEffect(() => {
     setIsLoading(isLoadingConfigs)
@@ -299,60 +283,41 @@ export default function HomePage() {
   }, [context, nextGame, nextGameChannelName]) */
 
   // both games observer
-  /* useEffect(() => {
-    if (!currentGame) _fetchCurrentGame()
-    if (!nextGame) _fetchNextGame()
-  }, [currentGame, nextGame]) */
-
-  // TODO: remover
-  /* useEffect(() => {
-    console.log('CHANNEL STATE:', wsChannel?.state)
-  }, [wsChannel?.state])
-
-  // TODO: remover
   useEffect(() => {
-    console.log('WS STATE:', ws?.connection?.state)
-  }, [ws?.connection?.state]) */
+    // TODO: remover
+    console.log(`ENTROU AQUI 1`)
+    console.log('CURRENT GAME', JSON.stringify(currentGame, null, 2))
+    console.log('NEXT GAME', JSON.stringify(nextGame, null, 2))
+    console.log('WS CHANNEL NAME:', wsChannel?.name)
+    console.log('===============================')
+
+    if (!currentGame) _fetchCurrentGame(false)
+    if (!nextGame) _fetchNextGame(false)
+
+    // assigning ws channel events to current game
+    if (currentGame && wsChannel?.name != `${baseWsChannelName}-${currentGame.ref}`) {
+      _unassignWSChannelEvents(`${baseWsChannelName}-placeholder`)
+      _assignWSChannelEvents(`${baseWsChannelName}-${currentGame.ref}`)
+    }
+
+    // assigning ws channel events to next game only if hasn't current game
+    if (!currentGame && nextGame && wsChannel?.name != `${baseWsChannelName}-${nextGame.ref}`) {
+      _unassignWSChannelEvents(`${baseWsChannelName}-placeholder`)
+      _assignWSChannelEvents(`${baseWsChannelName}-${nextGame.ref}`)
+    }
+  }, [currentGame, nextGame, wsChannel?.name])
 
   return (
     <div className="flex w-full flex-col items-center justify-center gap-y-4 p-8 relative">
       {/* TODO: remover esse botão */}
-      {/* {context === 'TIMER' && !currentGame && (
+      {context === 'TIMER' && !currentGame && (
         <Button variant="default" className="absolute top-16 left-0" onClick={_handleStartNextGame}>
           Forçar Início
         </Button>
-      )} */}
-
-      {/* TODO: remover */}
-      <Button variant="default" className="absolute top-48 left-0" onClick={_handleTest}>
-        TESTE
-      </Button>
+      )}
 
       {(context === 'TIMER' || currentGame?.status != game_status.RUNNING) && <HomeTimerContext parentLoading={isLoading} configs={configs} nextGame={nextGame} />}
       {context === 'GAME' && currentGame?.status === game_status.RUNNING && <HomeGameContext parentLoading={isLoading} game={currentGame} winners={winners} />}
-      {/* {context === 'TIMER' && (
-        <HomeGameContext
-          ref={homeGameContextRef}
-          parentLoading={isLoading}
-          game={{
-            id: 930,
-            ref: 'c24021f3-8d98-4649-b19b-63afc621cecf',
-            // userId: null,
-            dateTime: '2025-01-20T13:50:00.000Z',
-            type: 'NORMAL',
-            ticketPrice: 0.5,
-            firstPrizeValue: 10.0,
-            secondPrizeValue: 20.0,
-            thirdPrizeValue: 50.0,
-            grantedPrizes: false,
-            status: 'RUNNING',
-            balls: ['5','71','52','23','14','65','51','68','18','10','63','29','82','66','13','55','37','79','35','64','61','80','42','33','45','70','86','53','69','15','67','43','76','19'],
-            // createdAt: '2025-01-20T06:00:00.346Z',
-            // updatedAt: '2025-01-20T03:20:08.881Z'
-          }}
-          winners={winners}
-        />
-      )} */}
     </div>
   )
 }

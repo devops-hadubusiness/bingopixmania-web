@@ -1,9 +1,14 @@
 // packages
 import { createContext, useContext, useEffect, useMemo, useState, useCallback, ReactNode } from 'react'
 import { InboundMessage, Realtime, RealtimeChannel } from 'ably'
+import { format } from 'date-fns-tz'
+import { subHours } from 'date-fns'
 
 // hooks
 import { useToast } from '@/hooks/use-toast'
+
+// utils
+import { timeZone } from '@/utils/dates-util'
 
 // interfaces
 interface IWebSocketContextProps {
@@ -33,6 +38,8 @@ export const WebSocketProvider = ({ children }: { children: Readonly<ReactNode> 
   const [queue, setQueue] = useState<SetChannelProps[]>([])
 
   useEffect(() => {
+    if(ws?.connection?.state === 'connected') return
+    
     const ably = new Realtime({ key: import.meta.env.VITE_WS_API_KEY })
     let isPageReloading = false
 
@@ -86,7 +93,7 @@ export const WebSocketProvider = ({ children }: { children: Readonly<ReactNode> 
     async ({ channelName, cb }: SetChannelProps) => {
       if (ws?.connection?.state != 'connected') {
         const alreadyAddedToQueue = queue.some(q => q.channelName === channelName)
-        
+
         if (!alreadyAddedToQueue) {
           setQueue(prev => [...prev, { channelName, cb }])
           console.log('WebSocket instance not connected yet, adding to queue...')
@@ -94,18 +101,16 @@ export const WebSocketProvider = ({ children }: { children: Readonly<ReactNode> 
         return
       }
 
-      if(!['initialized', 'attached', undefined].includes(wsChannel?.state)) {
+      if (!['initialized', 'attached', undefined].includes(wsChannel?.state)) {
         console.log(`WebSocket channel has ${wsChannel?.state} status.`)
         return
       }
 
-      // TODO: remover
-      // const channel = ws.channels.get(channelName)
-      const channel = ws.channels.get('test')
+      const channel = ws.channels.get(channelName)
 
       channel.on('attached', () => {
-        console.log(`Connected to WebSocket Channel ${channelName}.`)
-        // channel.subscribe('message', (msg: InboundMessage) => cb('MESSAGE', msg.data))
+        const time = format(subHours(new Date(), 3), 'dd/MM/yyyy HH:mm:ss', { timeZone })
+        console.log(`Connected to WebSocket Channel ${channelName} at ${time}.`)
         setWsChannel(channel)
       })
 
@@ -137,7 +142,7 @@ export const WebSocketProvider = ({ children }: { children: Readonly<ReactNode> 
       })
 
       await channel.subscribe('message', (msg: InboundMessage) => cb('MESSAGE', msg.data))
-      
+
       return () => {
         console.log(`Closing WebSocket channel connection at ${loc}.setChannel function.`)
         channel.unsubscribe('message')
