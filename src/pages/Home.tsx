@@ -1,5 +1,5 @@
 // packages
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { subHours } from 'date-fns'
 import { format } from 'date-fns-tz'
 
@@ -24,7 +24,7 @@ import { timeZone } from '@/utils/dates-util'
 
 // lib
 import { api } from '@/lib/axios'
-import { showError } from '@/lib/alerts'
+import { showError, showLoading, closeLoading } from '@/lib/alerts'
 
 // store
 import { useAuthStore } from '@/store/auth'
@@ -97,8 +97,7 @@ export default function HomePage() {
         setCurrentGame(response.data.body?.[0])
 
         if (response.data.body?.length) {
-          // forcing context to be 'GAME'
-          if (context != 'GAME') setContext('GAME')
+          if (!isShowingLoadingAlert) setIsShowingLoadingAlert(true)
 
           // assigning to ws current-game event channel
           await _assignWSChannelEvents(`${baseWsChannelName}-${response.data.body[0].ref}`)
@@ -203,15 +202,13 @@ export default function HomePage() {
               return
             }
 
-            if (isShowingLoadingAlert) setIsShowingLoadingAlert(false)
+            // forcing context to be 'GAME'
+            if (context != 'GAME') setContext('GAME')
+            if (isShowingLoadingAlert && !isNaN(Number(currentGameRef.current?.balls?.length)) && Number(currentGameRef.current?.balls?.length) > 1) setIsShowingLoadingAlert(false)
 
             // eslint-disable-next-line
             const { nextBall } = typeof parsedMsg.data === 'string' ? JSON.parse(parsedMsg.data || '{}') : parsedMsg.data
-            setCurrentGame({ ...currentGameRef.current, balls: [...currentGameRef.current.balls, nextBall as string] })
-
-            // TODO: verificar se isso aqui é necessário ou somente atualizando no state funciona
-            // updating game context on every modification
-            // if (homeGameContextRef.current) homeGameContextRef.current.updateGame(currentGame)
+            setCurrentGame({ ...currentGameRef.current, balls: [...currentGameRef.current.balls, String(nextBall)] })
             break
 
           case WS_GAME_EVENTS.BALL_DRAW_FAIL:
@@ -271,6 +268,11 @@ export default function HomePage() {
     currentGameRef.current = currentGame
   }, [currentGame, nextGame])
 
+  useEffect(() => {
+    if(isShowingLoadingAlert) showLoading('Conectando ao servidor de jogo ...')
+    else closeLoading()
+  }, [isShowingLoadingAlert])
+
   return (
     <div className="flex w-full flex-col items-center justify-center gap-y-4 p-8 relative">
       {/* TODO: remover esse botão */}
@@ -281,7 +283,7 @@ export default function HomePage() {
       )}
 
       {(context === 'TIMER' || currentGame?.status != game_status.RUNNING) && <HomeTimerContext parentLoading={isLoading} configs={configs} nextGame={nextGame} />}
-      {context === 'GAME' && currentGame?.status === game_status.RUNNING && <HomeGameContext parentLoading={isLoading} game={currentGame} winners={winners} />}
+      {context === 'GAME' && currentGameRef.current?.status === game_status.RUNNING && <HomeGameContext parentLoading={isLoading} game={currentGameRef.current} winners={winners} />}
     </div>
   )
 }

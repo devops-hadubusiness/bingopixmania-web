@@ -1,6 +1,24 @@
 // packages
 import Swal from 'sweetalert2';
 
+export const showLoading = (message: string) => {
+  Swal.fire({
+    title: 'Carregando ...',
+    text: message,
+    // icon: 'info',
+    allowOutsideClick: false,
+    allowEscapeKey: false,
+    allowEnterKey: false,
+    didOpen: () => {
+      Swal.showLoading();
+    },
+  });
+};
+
+export const closeLoading = () => {
+  Swal.close(); // Fecha o alerta manualmente
+};
+
 export const showError = (message: string) => {
   return Swal.fire({
     title: 'Ops ...',
