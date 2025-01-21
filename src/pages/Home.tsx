@@ -1,7 +1,5 @@
 // packages
 import { useState, useEffect, useRef } from 'react'
-import { subHours } from 'date-fns'
-import { format } from 'date-fns-tz'
 
 // components
 import { Button } from '@/components/ui/button'
@@ -10,7 +8,6 @@ import { HomeGameContext } from '@/components/contexts/home-game-context'
 
 // entities
 import { game_status, GameProps } from '@/entities/game/game'
-import { WinnerProps } from '@/entities/winner/winner'
 
 // hooks
 import { useConfigs } from '@/hooks/use-configs'
@@ -18,9 +15,6 @@ import { useWaitForStateUpdate } from '@/hooks/use-wait-for-state-update'
 
 // contexts
 import { useWebSocket } from '@/contexts/WebSocketContext'
-
-// utils
-import { timeZone } from '@/utils/dates-util'
 
 // lib
 import { api } from '@/lib/axios'
@@ -48,7 +42,6 @@ export default function HomePage() {
   const { user } = useAuthStore()
   const { toast } = useToast()
   const { ws, wsChannel, setChannel } = useWebSocket()
-  const homeGameContextRef = useRef(null)
   const { configs, loading: isLoadingConfigs } = useConfigs(user?.ref)
   const [isLoading, setIsLoading] = useState<boolean>(false)
   const [context, setContext] = useState<ContextProps>('TIMER')
@@ -56,9 +49,11 @@ export default function HomePage() {
   const [nextGame, setNextGame] = useState<GameProps | undefined>()
   const [isShowingLoadingAlert, setIsShowingLoadingAlert] = useState<boolean>(false)
   const [isShowingWinnersAlert, setIsShowingWinnersAlert] = useState<boolean>(false)
-  const [winners, setWinners] = useState<WinnerProps[]>([])
   const waitForWsChannelStateUpdate = useWaitForStateUpdate(wsChannel?.state)
+  const contextRef = useRef<ContextProps>(context)
   const currentGameRef = useRef<GameProps | undefined>(currentGame)
+  const isShowingLoadingAlertRef = useRef<boolean>(isShowingLoadingAlert)
+  const isShowingWinnersAlertRef = useRef<boolean>(isShowingWinnersAlert)
 
   // TODO: remover
   const _handleStartNextGame = async () => {
@@ -97,6 +92,9 @@ export default function HomePage() {
         setCurrentGame(response.data.body?.[0])
 
         if (response.data.body?.length) {
+          // forcing context to be 'GAME'
+          if (contextRef.current != 'GAME') setContext('GAME')
+
           if (!isShowingLoadingAlert) setIsShowingLoadingAlert(true)
 
           // assigning to ws current-game event channel
@@ -130,6 +128,8 @@ export default function HomePage() {
         if (overwriteWsChannel || !currentGame) {
           // forcing context to be 'TIMER'
           if (context != 'TIMER') setContext('TIMER')
+            
+          if (isShowingLoadingAlert) setIsShowingLoadingAlert(false)
 
           // assigning to ws next-game event channel
           await _assignWSChannelEvents(`${baseWsChannelName}-${response.data.body[0].ref}`)
@@ -174,9 +174,6 @@ export default function HomePage() {
 
   const _channelCb = async (channelName: string, type: WSChannelMessageTypeProps, msg: string) => {
     try {
-      // TODO: remover
-      // console.log(`[${format(subHours(new Date(), 3), 'HH:mm:ss', { timeZone })}] MSG RECEBIDA DO CANAL: ${channelName}`)
-
       if (type === 'ERROR') {
         toast({ variant: 'destructive', title: 'Ops ...', description: msg || 'Ocorreu um erro na comunicação com o servidor de jogo.' })
         return
@@ -185,8 +182,6 @@ export default function HomePage() {
 
         switch (parsedMsg?.action) {
           case WS_GAME_EVENTS.GAME_STARTED:
-            if (!isShowingLoadingAlert) setIsShowingLoadingAlert(true)
-
             // refetching updated data
             await _fetchCurrentGame(true)
             break
@@ -197,18 +192,13 @@ export default function HomePage() {
             break
 
           case WS_GAME_EVENTS.BALL_DRAW:
-            if (!currentGameRef.current) {
-              console.log(`Current game is not defined yet, waiting...`)
-              return
-            }
-
             // forcing context to be 'GAME'
-            if (context != 'GAME') setContext('GAME')
-            if (isShowingLoadingAlert && !isNaN(Number(currentGameRef.current?.balls?.length)) && Number(currentGameRef.current?.balls?.length) > 1) setIsShowingLoadingAlert(false)
+            if (contextRef.current != 'GAME') setContext('GAME')
+            if (isShowingLoadingAlertRef.current && currentGameRef.current?.balls?.length) setIsShowingLoadingAlert(false)
 
             // eslint-disable-next-line
             const { nextBall } = typeof parsedMsg.data === 'string' ? JSON.parse(parsedMsg.data || '{}') : parsedMsg.data
-            setCurrentGame({ ...currentGameRef.current, balls: [...currentGameRef.current.balls, String(nextBall)] })
+            setCurrentGame({ ...(currentGameRef.current as GameProps), balls: [...(currentGameRef.current as GameProps).balls, String(nextBall)] })
             break
 
           case WS_GAME_EVENTS.BALL_DRAW_FAIL:
@@ -224,8 +214,17 @@ export default function HomePage() {
             break
 
           case WS_GAME_EVENTS.GAME_FINISHED:
-            // TODO: aqui vai receber os winners dentro da parsedMsg.data
-            // TODO: mostrar modal
+            // eslint-disable-next-line
+            const { winners } = typeof parsedMsg.data === 'string' ? JSON.parse(parsedMsg.data || '{}') : parsedMsg.data
+            setCurrentGame({ ...(currentGameRef.current as GameProps), winners })
+
+            if (!isShowingWinnersAlertRef.current) {
+              setIsShowingWinnersAlert(true)
+              setTimeout(() => setIsShowingWinnersAlert(false), 3000)
+            }
+
+            // forcing context to be 'TIMER'
+            if (contextRef.current != 'TIMER') setContext('TIMER')
 
             // refetching updated data
             await _fetchNextGame(true, true)
@@ -247,31 +246,35 @@ export default function HomePage() {
     setIsLoading(isLoadingConfigs)
   }, [isLoadingConfigs])
 
+  // context observer
+  useEffect(() => {
+    contextRef.current = context
+  }, [context])
+
   // both games observer
   useEffect(() => {
-    // TODO: remover
-    console.log(
-      `ENTROU AQUI ${JSON.stringify(
-        {
-          currentGame: { ref: currentGame?.ref, balls: currentGame?.balls },
-          nextGame: { ref: nextGame?.ref }
-        },
-        null,
-        2
-      )}`
-    )
-    console.log('===============================')
-
     if (!currentGame) _fetchCurrentGame(false)
     if (!nextGame) _fetchNextGame(false, false)
 
     currentGameRef.current = currentGame
   }, [currentGame, nextGame])
 
+  // loading alert observer
   useEffect(() => {
-    if(isShowingLoadingAlert) showLoading('Conectando ao servidor de jogo ...')
+    if (isShowingLoadingAlert) showLoading('Conectando ao servidor de jogo ...')
     else closeLoading()
+
+    isShowingLoadingAlertRef.current = isShowingLoadingAlert
   }, [isShowingLoadingAlert])
+
+  // TODO: trocar por alert do shadcn
+  // winners alert observer
+  useEffect(() => {
+    if (isShowingWinnersAlert) showLoading(`VENCEDORES: ${JSON.stringify(currentGame?.winners, null, 2)}`)
+    else closeLoading()
+
+    isShowingWinnersAlertRef.current = isShowingWinnersAlert
+  }, [isShowingWinnersAlert])
 
   return (
     <div className="flex w-full flex-col items-center justify-center gap-y-4 p-8 relative">
@@ -283,7 +286,7 @@ export default function HomePage() {
       )}
 
       {(context === 'TIMER' || currentGame?.status != game_status.RUNNING) && <HomeTimerContext parentLoading={isLoading} configs={configs} nextGame={nextGame} />}
-      {context === 'GAME' && currentGameRef.current?.status === game_status.RUNNING && <HomeGameContext parentLoading={isLoading} game={currentGameRef.current} winners={winners} />}
+      {context === 'GAME' && currentGameRef.current?.status === game_status.RUNNING && <HomeGameContext parentLoading={isLoading} game={currentGameRef.current} />}
     </div>
   )
 }

@@ -24,10 +24,9 @@ import { cn } from '@/lib/utils'
 type HomeGameContextProps = {
   parentLoading: boolean
   game: GameProps
-  winners: WinnerProps[]
 }
 
-export function HomeGameContext({ parentLoading, game, winners }: HomeGameContextProps) {
+export function HomeGameContext({ parentLoading, game }: HomeGameContextProps) {
   const columns: ColumnDef<any>[] = [
     {
       accessorKey: 'coupon',
@@ -62,7 +61,7 @@ export function HomeGameContext({ parentLoading, game, winners }: HomeGameContex
   ]
 
   const _hasWinner = (prizeType: winner_prize_type) => {
-    return winners.some(w => w.prizeType === prizeType)
+    return game.winners?.some(w => w.prizeType === prizeType)
   }
 
   return (
