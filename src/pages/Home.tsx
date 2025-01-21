@@ -1,6 +1,7 @@
 // packages
-import { useState, useEffect, useRef } from 'react'
-import { Realtime } from 'ably'
+import { useState, useEffect, useRef, useCallback } from 'react'
+import { subHours } from 'date-fns'
+import { format } from 'date-fns-tz'
 
 // components
 import { Button } from '@/components/ui/button'
@@ -17,6 +18,9 @@ import { useWaitForStateUpdate } from '@/hooks/use-wait-for-state-update'
 
 // contexts
 import { useWebSocket } from '@/contexts/WebSocketContext'
+
+// utils
+import { timeZone } from '@/utils/dates-util'
 
 // lib
 import { api } from '@/lib/axios'
@@ -50,12 +54,10 @@ export default function HomePage() {
   const [context, setContext] = useState<ContextProps>('TIMER')
   const [currentGame, setCurrentGame] = useState<GameProps | undefined>()
   const [nextGame, setNextGame] = useState<GameProps | undefined>()
-  const [currentGameChannelName, setCurrentGameChannelName] = useState<string | undefined>()
-  const [nextGameChannelName, setNextGameChannelName] = useState<string | undefined>()
   const [isShowingLoadingAlert, setIsShowingLoadingAlert] = useState<boolean>(false)
   const [isShowingWinnersAlert, setIsShowingWinnersAlert] = useState<boolean>(false)
   const [winners, setWinners] = useState<WinnerProps[]>([])
-  const waitForWsChannelNameUpdate = useWaitForStateUpdate(wsChannel?.name)
+  const waitForWsChannelStateUpdate = useWaitForStateUpdate(wsChannel?.state)
 
   // TODO: remover
   const _handleStartNextGame = async () => {
@@ -65,15 +67,10 @@ export default function HomePage() {
       // assigning to ws placeholder event channel before call the api
       await _assignWSChannelEvents(`${baseWsChannelName}-placeholder`)
 
-      // waiting for ws channel connection
-      await waitForWsChannelNameUpdate()
-
       const response = await api.post(`/start-next-game`)
 
-      if (response.data?.statusCode === HTTP_STATUS_CODE.OK) {
-        toast({ variant: 'success', title: 'Sucesso', description: 'Jogo iniciado com sucesso.' })
-        // await Promise.all([_fetchCurrentGame(), _fetchNextGame()])
-      } else toast({ variant: 'destructive', title: 'Ops ...', description: 'Não foi possível iniciar o jogo.' })
+      if (response.data?.statusCode === HTTP_STATUS_CODE.OK) toast({ variant: 'success', title: 'Sucesso', description: 'Jogo iniciado com sucesso.' })
+      else toast({ variant: 'destructive', title: 'Ops ...', description: 'Não foi possível iniciar o jogo.' })
     } catch (err) {
       console.error(`Unhandled rejection at ${loc}._handleStartNextGame function. Details: ${err}`)
       toast({ variant: 'destructive', title: 'Ops ...', description: 'Não foi possível iniciar o jogo.' })
@@ -82,10 +79,10 @@ export default function HomePage() {
     }
   }
 
-  const _fetchCurrentGame = async (/* refetch: boolean */) => {
-    try {
-      // if(!refetch && currentGame) return // refetching only when necessary to update the currentGameInstance
+  const _fetchCurrentGame = async (refetch: boolean) => {
+    if (!refetch && currentGame) return // refetching only when necessary to update the currentGame
 
+    try {
       setIsLoading(true)
 
       const response = await api.get(`/`, {
@@ -95,21 +92,23 @@ export default function HomePage() {
         }
       })
 
-      if ([HTTP_STATUS_CODE.OK, HTTP_STATUS_CODE.NOT_FOUND].includes(response.data?.statusCode)) setCurrentGame(response.data.body?.[0])
-      else {
-        toast({ variant: 'destructive', title: 'Ops ...', description: response.data?.statusMessage || 'Não foi possível buscar o jogo atual.' })
-        if (currentGame) setCurrentGame(undefined) // reseting data
-      }
+      if ([HTTP_STATUS_CODE.OK, HTTP_STATUS_CODE.NOT_FOUND].includes(response.data?.statusCode)) {
+        setCurrentGame(response.data.body?.[0])
+
+        // assigning to ws current-game event channel
+        if (response.data.body?.length) await _assignWSChannelEvents(`${baseWsChannelName}-${response.data.body[0].ref}`)
+      } else toast({ variant: 'destructive', title: 'Ops ...', description: response.data?.statusMessage || 'Não foi possível buscar o jogo atual.' })
     } catch (err) {
       console.error(`Unhandled rejection at ${loc}._fetchCurrentGame function. Details: ${err}`)
       toast({ variant: 'destructive', title: 'Ops ...', description: 'Não foi possível buscar o jogo atual.' })
-      if (currentGame) setCurrentGame(undefined) // reseting data
     } finally {
       setIsLoading(false)
     }
   }
 
-  const _fetchNextGame = async () => {
+  const _fetchNextGame = async (refetch: boolean, overrideWsChannel: boolean) => {
+    if (!refetch && nextGame) return // refetching only when necessary to update the nextGame
+
     try {
       setIsLoading(true)
 
@@ -120,28 +119,36 @@ export default function HomePage() {
         }
       })
 
-      if (response.data?.statusCode === HTTP_STATUS_CODE.OK) setNextGame(response.data.body[0])
-      else {
+      if (response.data?.statusCode === HTTP_STATUS_CODE.OK) {
+        setNextGame(response.data.body[0])
+
+        // assigning to ws next-game event channel
+        if (overrideWsChannel || !currentGame) await _assignWSChannelEvents(`${baseWsChannelName}-${response.data.body[0].ref}`)
+      } else {
         if (import.meta.env.VITE_NODE_ENV != 'development') toast({ variant: 'destructive', title: 'Ops ...', description: response.data?.statusMessage || 'Não foi possível buscar o próximo jogo.' })
-        if (nextGame) setNextGame(undefined) // reseting data
       }
     } catch (err) {
       console.error(`Unhandled rejection at ${loc}._fetchNextGame function. Details: ${err}`)
       toast({ variant: 'destructive', title: 'Ops ...', description: 'Não foi possível buscar o próximo jogo.' })
-      if (nextGame) setNextGame(undefined) // reseting data
     } finally {
       setIsLoading(false)
     }
   }
 
   const _assignWSChannelEvents = async (channelName: string) => {
-    console.log('CHAMOU: ', channelName)
+    // unassigning if the target channel is differente than the already assigned one
+    if (wsChannel?.state === 'attached' && wsChannel?.name != channelName) await _unassignWSChannelEvents(wsChannel?.name)
+
+    console.log('ATRIBUÍNDO EVENTOS AO CANAL: ', channelName) // TODO: remover
     setChannel({ channelName, cb: _channelCb })
+
+    // waiting for ws channel connection to be 'attached' if it isn't yet
+    if (wsChannel?.state && wsChannel?.state != 'attached') await waitForWsChannelStateUpdate('attached')
+      
+    console.log('EVENTOS ATRIBUÍDOS COM SUCESSO AO CANAL: ', channelName) // TODO: remover
   }
 
   const _unassignWSChannelEvents = async (channelName: string) => {
-    console.warn(`============== TIRANDO OS EVENTOS ===============`) // TODO: remover
-
     try {
       if (wsChannel?.state === 'attached' && wsChannel?.name === channelName) {
         wsChannel.unsubscribe('message')
@@ -155,8 +162,11 @@ export default function HomePage() {
     }
   }
 
-  const _channelCb = async (type: WSChannelMessageTypeProps, msg: string) => {
+  const _channelCb = useCallback(async (channelName: string, type: WSChannelMessageTypeProps, msg: string) => {
     try {
+      // TODO: remover
+      console.log(`[${format(subHours(new Date(), 3), 'HH:mm:ss', { timeZone})}] MSG RECEBIDA DO CANAL: ${channelName}`) 
+
       if (type === 'ERROR') {
         toast({ variant: 'destructive', title: 'Ops ...', description: msg || 'Ocorreu um erro na comunicação com o servidor de jogo.' })
         return
@@ -168,7 +178,7 @@ export default function HomePage() {
             if (!isShowingLoadingAlert) setIsShowingLoadingAlert(true)
 
             // refetching updated data
-            await Promise.all([_fetchCurrentGame(), _fetchNextGame()])
+            await _fetchCurrentGame(true)
             break
 
           case WS_GAME_EVENTS.GAME_START_FAIL:
@@ -177,11 +187,15 @@ export default function HomePage() {
             break
 
           case WS_GAME_EVENTS.BALL_DRAW:
+            if (!currentGame) {
+              console.log(`Current game is not defined yet, waiting...`)
+              return
+            }
+
             if (isShowingLoadingAlert) setIsShowingLoadingAlert(false)
 
             // eslint-disable-next-line
             const { nextBall } = parsedMsg.data as unknown as { nextBall: string }
-            if (!currentGame) await _fetchCurrentGame()
             setCurrentGame(prev => (prev ? { ...prev, balls: [...prev.balls, nextBall] } : prev))
             break
 
@@ -202,7 +216,7 @@ export default function HomePage() {
             // TODO: mostrar modal
 
             // refetching updated data
-            await Promise.all([_fetchCurrentGame(), _fetchNextGame()])
+            await _fetchNextGame(true, true)
             break
 
           case WS_GAME_EVENTS.GAME_FINISH_FAIL:
@@ -215,7 +229,7 @@ export default function HomePage() {
       console.error(`Unhandled rejection at ${loc}._channelCb function. Details: ${err}`)
       toast({ variant: 'destructive', title: 'Ops ...', description: 'Não foi possível receber o evento.' })
     }
-  }
+  }, [currentGame, isShowingLoadingAlert])
 
   useEffect(() => {
     setIsLoading(isLoadingConfigs)
@@ -285,13 +299,12 @@ export default function HomePage() {
   // both games observer
   useEffect(() => {
     // TODO: remover
-    console.log(`ENTROU AQUI 1`)
-    console.log('CURRENT GAME', JSON.stringify(currentGame, null, 2))
-    console.log('NEXT GAME', JSON.stringify(nextGame, null, 2))
-    console.log('WS CHANNEL NAME:', wsChannel?.name)
+    console.log(`ENTROU AQUI ${JSON.stringify({ currentGame, nextGame, wsChannelName: wsChannel?.name }, null, 2)}`)
     console.log('===============================')
 
     if (!currentGame) _fetchCurrentGame(false)
+    if (!nextGame) _fetchNextGame(false, false)
+    /* if (!currentGame) _fetchCurrentGame(false)
     if (!nextGame) _fetchNextGame(false)
 
     // assigning ws channel events to current game
@@ -304,8 +317,8 @@ export default function HomePage() {
     if (!currentGame && nextGame && wsChannel?.name != `${baseWsChannelName}-${nextGame.ref}`) {
       _unassignWSChannelEvents(`${baseWsChannelName}-placeholder`)
       _assignWSChannelEvents(`${baseWsChannelName}-${nextGame.ref}`)
-    }
-  }, [currentGame, nextGame, wsChannel?.name])
+    } */
+  }, [currentGame, nextGame /* , wsChannel?.name */])
 
   return (
     <div className="flex w-full flex-col items-center justify-center gap-y-4 p-8 relative">

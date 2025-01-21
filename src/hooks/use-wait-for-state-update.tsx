@@ -6,14 +6,18 @@ export function useWaitForStateUpdate(state) {
 
   useEffect(() => {
     if (resolverRef.current) {
-      resolverRef.current() // Resolve a Promise quando o estado é atualizado
-      resolverRef.current = null
-    }
-  }, [state]) // O efeito será disparado sempre que o estado for atualizado
+      const { targetValue, resolve } = resolverRef.current
 
-  const waitForUpdate = () => {
+      if (state === targetValue) {
+        resolve()
+        resolverRef.current = null
+      }
+    }
+  }, [state])
+
+  const waitForUpdate = targetValue => {
     return new Promise(resolve => {
-      resolverRef.current = resolve
+      resolverRef.current = { targetValue, resolve }
     })
   }
 

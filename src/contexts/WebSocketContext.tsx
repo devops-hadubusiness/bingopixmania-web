@@ -22,7 +22,7 @@ interface IWebSocketContextProps {
 import { WSChannelMessageTypeProps } from '@/types/ws-types'
 type SetChannelProps = {
   channelName: string
-  cb: (type: WSChannelMessageTypeProps, msg: string) => void
+  cb: (channelName: string, type: WSChannelMessageTypeProps, msg: string) => void
 }
 
 // contexts
@@ -119,7 +119,7 @@ export const WebSocketProvider = ({ children }: { children: Readonly<ReactNode> 
 
         if (channel.errorReason?.stack) {
           toast({ variant: 'destructive', title: 'Ops ...', description: `Não foi possível se conectar ao canal ${channelName} do servidor de WebSocket.` })
-          cb('ERROR', channel.errorReason.stack)
+          cb(channel.name, 'ERROR', channel.errorReason.stack)
         }
       })
 
@@ -128,7 +128,7 @@ export const WebSocketProvider = ({ children }: { children: Readonly<ReactNode> 
 
         if (channel.errorReason?.stack) {
           toast({ variant: 'destructive', title: 'Ops ...', description: `A conexão com o canal ${channelName} do servidor de WebSocket foi suspensa.` })
-          cb('ERROR', channel.errorReason.stack)
+          cb(channel.name, 'ERROR', channel.errorReason.stack)
         }
       })
 
@@ -137,11 +137,11 @@ export const WebSocketProvider = ({ children }: { children: Readonly<ReactNode> 
 
         if (channel.errorReason?.stack) {
           toast({ variant: 'destructive', title: 'Ops ...', description: `A conexão com o canal ${channelName} do servidor de WebSocket foi desanexada.` })
-          cb('ERROR', channel.errorReason.stack)
+          cb(channel.name, 'ERROR', channel.errorReason.stack)
         }
       })
 
-      await channel.subscribe('message', (msg: InboundMessage) => cb('MESSAGE', msg.data))
+      await channel.subscribe('message', (msg: InboundMessage) => cb(channel.name, 'MESSAGE', msg.data))
 
       return () => {
         console.log(`Closing WebSocket channel connection at ${loc}.setChannel function.`)
