@@ -74,6 +74,12 @@ function ProtectedRoute({ isAllowed, redirectTo }: ProtectedRouteProps) {
   return <Outlet />
 }
 
+const ConditionalWebsocketProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const websocketRoutes = ['/sorteio-ao-vivo']
+  const shouldUseWebsocket = websocketRoutes.includes(location.pathname)
+  return shouldUseWebsocket ? <WebSocketProvider>{children}</WebSocketProvider> : <>{children}</>
+}
+
 function App() {
   const { user } = useAuthStore()
 
@@ -104,10 +110,10 @@ export default function AppWrapper() {
             <AuthProvider>
               <AuthGuard>
                 <SidebarProvider>
-                  <WebSocketProvider>
+                  <ConditionalWebsocketProvider>
                     <Toaster />
                     <App />
-                  </WebSocketProvider>
+                  </ConditionalWebsocketProvider>
                 </SidebarProvider>
               </AuthGuard>
             </AuthProvider>

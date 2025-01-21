@@ -74,6 +74,7 @@ export const WebSocketProvider = ({ children }: { children: Readonly<ReactNode> 
     })
 
     return () => {
+      console.log(`Closing WebSocket connection at ${loc}.useEffect function.`)
       window.removeEventListener('beforeunload', handleBeforeUnload)
       ably.connection.close()
       ably.close()
@@ -82,10 +83,10 @@ export const WebSocketProvider = ({ children }: { children: Readonly<ReactNode> 
   }, [])
 
   const setChannel = useCallback(
-    ({ channelName, cb }: SetChannelProps) => {
+    async ({ channelName, cb }: SetChannelProps) => {
       if (ws?.connection?.state != 'connected') {
         const alreadyAddedToQueue = queue.some(q => q.channelName === channelName)
-console.log(queue.length, ws?.connection?.state) // TODO: remover
+        
         if (!alreadyAddedToQueue) {
           setQueue(prev => [...prev, { channelName, cb }])
           console.log('WebSocket instance not connected yet, adding to queue...')
@@ -99,7 +100,6 @@ console.log(queue.length, ws?.connection?.state) // TODO: remover
       }
 
       const channel = ws.channels.get(channelName)
-      console.log(channel.state) // TODO: remover
 
       channel.on('attached', () => {
         console.log(`Connected to WebSocket Channel ${channelName}.`)
@@ -134,19 +134,20 @@ console.log(queue.length, ws?.connection?.state) // TODO: remover
         }
       })
 
+      await channel.subscribe('message', (msg: InboundMessage) => cb('MESSAGE', msg.data))
+      
       return () => {
-        console.log('encerrou') // TODO: remover
+        console.log(`Closing WebSocket channel connection at ${loc}.setChannel function.`)
         channel.unsubscribe('message')
         channel.detach()
         ws.channels.release(channelName)
         channel.off()
       }
     },
-    [ws]
+    [ws, wsChannel?.state, queue]
   )
 
   useEffect(() => {
-    console.info(queue.length, ws?.connection?.state) // TODO: remover
     if (queue.length && ws?.connection?.state === 'connected') {
       for (const item of queue) {
         setChannel(item)

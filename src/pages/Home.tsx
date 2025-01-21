@@ -124,7 +124,7 @@ export default function HomePage() {
 
   const _assignWSChannelEvents = async (channelName: string) => {
     console.log('CHAMOU: ', channelName)
-    setChannel({channelName, cb: _channelCb})
+    setChannel({ channelName, cb: _channelCb })
   }
 
   const _unassignWSChannelEvents = async (channelName: string) => {
@@ -143,7 +143,8 @@ export default function HomePage() {
 
   const _channelCb = async (type: WSChannelMessageTypeProps, msg: string) => {
     try {
-      console.log(type, msg)
+      console.log('MSG RECEBIDA: ', type, msg) // TODO: remover
+
       if (type === 'ERROR') {
         toast({ variant: 'destructive', title: 'Ops ...', description: msg || 'Ocorreu um erro na comunicação com o servidor de jogo.' })
         return
@@ -177,14 +178,17 @@ export default function HomePage() {
             location.reload()
             break
 
-          // case WS_GAME_EVENTS.WINNERS:
+          case WS_GAME_EVENTS.NEW_WINNERS:
           // TODO: receber um ou mais winners, receber qual foi o prêmio, atualizar na variável de estado e no contexto do jogo o que for necessário
           // TODO: se for terceiro prêmio, exibir pop-up abaixo
           // if(!isShowingWinnersAlert) setIsShowingWinnersAlert(true)
           // TODO: após o timeout do alert, fazer setWinners([])
-          // break
+          break
 
           case WS_GAME_EVENTS.GAME_FINISHED:
+            // TODO: aqui vai receber os winners dentro da parsedMsg.data
+            // TODO: mostrar modal
+
             // refetching updated data
             await Promise.all([_fetchCurrentGame(), _fetchNextGame()])
             break
@@ -274,7 +278,7 @@ export default function HomePage() {
 
   // TODO: remover
   useEffect(() => {
-    console.log(wsChannel?.state)
+    console.log('CHANNEL STATE:', wsChannel?.state)
   }, [wsChannel])
 
   return (
