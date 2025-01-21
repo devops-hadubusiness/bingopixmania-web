@@ -75,7 +75,7 @@ function ProtectedRoute({ isAllowed, redirectTo }: ProtectedRouteProps) {
 }
 
 const ConditionalWebsocketProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const websocketRoutes = ['/sorteio-ao-vivo']
+  const websocketRoutes = ['/login', '/sorteio-ao-vivo']
   const shouldUseWebsocket = websocketRoutes.includes(location.pathname)
   return shouldUseWebsocket ? <WebSocketProvider>{children}</WebSocketProvider> : <>{children}</>
 }

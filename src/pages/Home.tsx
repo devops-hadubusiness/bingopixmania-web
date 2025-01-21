@@ -1,5 +1,6 @@
 // packages
 import { useState, useEffect, useRef } from 'react'
+import { Realtime } from 'ably'
 
 // components
 import { Button } from '@/components/ui/button'
@@ -40,7 +41,7 @@ const loc = `@/pages/Home`
 export default function HomePage() {
   const { user } = useAuthStore()
   const { toast } = useToast()
-  const { ws, wsChannel, setChannel } = useWebSocket()
+  // const { ws, wsChannel, setChannel } = useWebSocket()
   const homeGameContextRef = useRef(null)
   const { configs, loading: isLoadingConfigs } = useConfigs(user?.ref)
   const [isLoading, setIsLoading] = useState<boolean>(false)
@@ -49,13 +50,37 @@ export default function HomePage() {
   const [nextGame, setNextGame] = useState<GameProps | undefined>()
   const [currentGameChannelName, setCurrentGameChannelName] = useState<string | undefined>()
   const [nextGameChannelName, setNextGameChannelName] = useState<string | undefined>()
-  // const [calledToStart, setIsShowingWinnersAlert] = useState<boolean>(false)
   const [isShowingLoadingAlert, setIsShowingLoadingAlert] = useState<boolean>(false)
   const [isShowingWinnersAlert, setIsShowingWinnersAlert] = useState<boolean>(false)
   const [winners, setWinners] = useState<WinnerProps[]>([])
 
   // TODO: remover
-  const _handleStartNextGame = async () => {
+  const _handleTest = async () => {
+    try {
+      // TODO: testar inverter a ordem
+      await api.post('/test')
+      // setChannel({ channelName: 'test', cb: (type, msg) => console.log(`TYPE: ${type}\nMSG:${JSON.stringify(msg, null, 2)}`) })
+      const ably = new Realtime({ key: import.meta.env.VITE_WS_API_KEY })
+
+      ably.connection.on('connected', async () => {
+        console.log(`Connected to WebSocket.`)
+
+        const channel = ably.channels.get('test')
+
+        channel.on('attached', () => {
+          console.log(`Connected to WebSocket Channel 'test'.`)
+          // channel.subscribe('message', (msg) => console.log(JSON.stringify(msg)))
+        })
+
+        await channel.subscribe('message', (msg) => console.log(JSON.stringify(msg)))
+      })
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
+  // TODO: remover
+  /* const _handleStartNextGame = async () => {
     try {
       setIsLoading(true)
 
@@ -71,9 +96,9 @@ export default function HomePage() {
     } finally {
       setIsLoading(false)
     }
-  }
+  } */
 
-  const _fetchCurrentGame = async () => {
+  /* const _fetchCurrentGame = async () => {
     try {
       setIsLoading(true)
 
@@ -96,9 +121,9 @@ export default function HomePage() {
     } finally {
       setIsLoading(false)
     }
-  }
+  } */
 
-  const _fetchNextGame = async () => {
+  /* const _fetchNextGame = async () => {
     try {
       setIsLoading(true)
 
@@ -121,16 +146,14 @@ export default function HomePage() {
     } finally {
       setIsLoading(false)
     }
-  }
+  } */
 
-  const _assignWSChannelEvents = async (channelName: string) => {
-    console.log('CHAMOU: ', wsChannel?.state)
-    // console.log('CHAMOU: ', isShowingWinnersAlert)
-    /* if(!isShowingWinnersAlert) */ setChannel({ channelName, cb: _channelCb })
-    // setIsShowingWinnersAlert(true)
-  }
+  /* const _assignWSChannelEvents = async (channelName: string) => {
+    console.log('CHAMOU: ', channelName)
+    setChannel({ channelName, cb: _channelCb })
+  } */
 
-  const _unassignWSChannelEvents = async (channelName: string) => {
+  /* const _unassignWSChannelEvents = async (channelName: string) => {
     try {
       if (wsChannel?.state === 'attached' && wsChannel?.name === channelName) {
         wsChannel.unsubscribe('message')
@@ -142,19 +165,17 @@ export default function HomePage() {
       console.error(`Unhandled rejection at ${loc}._unassignWSChannelEvents function. Details: ${err}`)
       toast({ variant: 'destructive', title: 'Ops ...', description: 'Não foi possível desanexar os eventos do servidor de WebSocket.' })
     }
-  }
+  } */
 
-  const _channelCb = async (type: WSChannelMessageTypeProps, msg: string) => {
+  /* const _channelCb = async (type: WSChannelMessageTypeProps, msg: string) => {
     try {
+      console.log('MSG RECEBIDA: ', type, msg) // TODO: remover
+
       if (type === 'ERROR') {
         toast({ variant: 'destructive', title: 'Ops ...', description: msg || 'Ocorreu um erro na comunicação com o servidor de jogo.' })
         return
       } else if (type === 'MESSAGE') {
         const parsedMsg: WSGameEventProps = typeof msg === 'string' ? JSON.parse(msg || '{}') : msg
-        if(!parsedMsg) {
-          console.log(`Empty message at ${loc}._channelCb function. Details: ${JSON.stringify({ type, msg }, null, 2)}`)
-          return
-        }
 
         switch (parsedMsg.action) {
           case WS_GAME_EVENTS.GAME_STARTED:
@@ -184,11 +205,11 @@ export default function HomePage() {
             break
 
           case WS_GAME_EVENTS.NEW_WINNERS:
-          // TODO: receber um ou mais winners, receber qual foi o prêmio, atualizar na variável de estado e no contexto do jogo o que for necessário
-          // TODO: se for terceiro prêmio, exibir pop-up abaixo
-          // if(!isShowingWinnersAlert) setIsShowingWinnersAlert(true)
-          // TODO: após o timeout do alert, fazer setWinners([])
-          break
+            // TODO: receber um ou mais winners, receber qual foi o prêmio, atualizar na variável de estado e no contexto do jogo o que for necessário
+            // TODO: se for terceiro prêmio, exibir pop-up abaixo
+            // if(!isShowingWinnersAlert) setIsShowingWinnersAlert(true)
+            // TODO: após o timeout do alert, fazer setWinners([])
+            break
 
           case WS_GAME_EVENTS.GAME_FINISHED:
             // TODO: aqui vai receber os winners dentro da parsedMsg.data
@@ -208,14 +229,14 @@ export default function HomePage() {
       console.error(`Unhandled rejection at ${loc}._channelCb function. Details: ${err}`)
       toast({ variant: 'destructive', title: 'Ops ...', description: 'Não foi possível receber o evento.' })
     }
-  }
+  } */
 
   useEffect(() => {
     setIsLoading(isLoadingConfigs)
   }, [isLoadingConfigs])
 
   // current game observer
-  useEffect(() => {
+  /* useEffect(() => {
     if (currentGame) {
       const channelName = `${import.meta.env.VITE_APP_NAME}-${import.meta.env.VITE_NODE_ENV}-game-${currentGame.ref}`
       if (currentGameChannelName != channelName) setCurrentGameChannelName(channelName)
@@ -247,10 +268,10 @@ export default function HomePage() {
 
       if (context != 'TIMER') setContext('TIMER')
     }
-  }, [context, currentGame, currentGameChannelName])
+  }, [context, currentGame, currentGameChannelName]) */
 
   // current game observer
-  useEffect(() => {
+  /* useEffect(() => {
     if (nextGame) {
       const channelName = `${import.meta.env.VITE_APP_NAME}-${import.meta.env.VITE_NODE_ENV}-game-${nextGame.ref}`
       if (nextGameChannelName != channelName) setNextGameChannelName(channelName)
@@ -273,22 +294,37 @@ export default function HomePage() {
         setNextGameChannelName(undefined)
       }
     }
-  }, [context, nextGame, nextGameChannelName])
+  }, [context, nextGame, nextGameChannelName]) */
 
   // both games observer
-  useEffect(() => {
+  /* useEffect(() => {
     if (!currentGame) _fetchCurrentGame()
     if (!nextGame) _fetchNextGame()
-  }, [currentGame, nextGame])
+  }, [currentGame, nextGame]) */
+
+  // TODO: remover
+  /* useEffect(() => {
+    console.log('CHANNEL STATE:', wsChannel?.state)
+  }, [wsChannel?.state])
+
+  // TODO: remover
+  useEffect(() => {
+    console.log('WS STATE:', ws?.connection?.state)
+  }, [ws?.connection?.state]) */
 
   return (
     <div className="flex w-full flex-col items-center justify-center gap-y-4 p-8 relative">
       {/* TODO: remover esse botão */}
-      {context === 'TIMER' && !currentGame && (
+      {/* {context === 'TIMER' && !currentGame && (
         <Button variant="default" className="absolute top-16 left-0" onClick={_handleStartNextGame}>
           Forçar Início
         </Button>
-      )}
+      )} */}
+
+      {/* TODO: remover */}
+      <Button variant="default" className="absolute top-48 left-0" onClick={_handleTest}>
+        TESTE
+      </Button>
 
       {(context === 'TIMER' || currentGame?.status != game_status.RUNNING) && <HomeTimerContext parentLoading={isLoading} configs={configs} nextGame={nextGame} />}
       {context === 'GAME' && currentGame?.status === game_status.RUNNING && <HomeGameContext parentLoading={isLoading} game={currentGame} winners={winners} />}

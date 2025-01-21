@@ -17,7 +17,8 @@ function setupAPIClient() {
 
   api.interceptors.request.use(
     config => {
-      if (token) config.headers.Authorization = `Bearer ${token}`
+      const storageToken = JSON.parse(localStorage.getItem('auth-storage') || '{}')?.state?.token
+      if (token || storageToken) config.headers.Authorization = `Bearer ${token || storageToken}`
       return config
     },
     error => {
