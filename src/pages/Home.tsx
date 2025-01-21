@@ -49,6 +49,7 @@ export default function HomePage() {
   const [nextGame, setNextGame] = useState<GameProps | undefined>()
   const [currentGameChannelName, setCurrentGameChannelName] = useState<string | undefined>()
   const [nextGameChannelName, setNextGameChannelName] = useState<string | undefined>()
+  // const [calledToStart, setIsShowingWinnersAlert] = useState<boolean>(false)
   const [isShowingLoadingAlert, setIsShowingLoadingAlert] = useState<boolean>(false)
   const [isShowingWinnersAlert, setIsShowingWinnersAlert] = useState<boolean>(false)
   const [winners, setWinners] = useState<WinnerProps[]>([])
@@ -123,8 +124,10 @@ export default function HomePage() {
   }
 
   const _assignWSChannelEvents = async (channelName: string) => {
-    console.log('CHAMOU: ', channelName)
-    setChannel({ channelName, cb: _channelCb })
+    console.log('CHAMOU: ', wsChannel?.state)
+    // console.log('CHAMOU: ', isShowingWinnersAlert)
+    /* if(!isShowingWinnersAlert) */ setChannel({ channelName, cb: _channelCb })
+    // setIsShowingWinnersAlert(true)
   }
 
   const _unassignWSChannelEvents = async (channelName: string) => {
@@ -143,13 +146,15 @@ export default function HomePage() {
 
   const _channelCb = async (type: WSChannelMessageTypeProps, msg: string) => {
     try {
-      console.log('MSG RECEBIDA: ', type, msg) // TODO: remover
-
       if (type === 'ERROR') {
         toast({ variant: 'destructive', title: 'Ops ...', description: msg || 'Ocorreu um erro na comunicação com o servidor de jogo.' })
         return
       } else if (type === 'MESSAGE') {
         const parsedMsg: WSGameEventProps = typeof msg === 'string' ? JSON.parse(msg || '{}') : msg
+        if(!parsedMsg) {
+          console.log(`Empty message at ${loc}._channelCb function. Details: ${JSON.stringify({ type, msg }, null, 2)}`)
+          return
+        }
 
         switch (parsedMsg.action) {
           case WS_GAME_EVENTS.GAME_STARTED:
@@ -275,11 +280,6 @@ export default function HomePage() {
     if (!currentGame) _fetchCurrentGame()
     if (!nextGame) _fetchNextGame()
   }, [currentGame, nextGame])
-
-  // TODO: remover
-  useEffect(() => {
-    console.log('CHANNEL STATE:', wsChannel?.state)
-  }, [wsChannel])
 
   return (
     <div className="flex w-full flex-col items-center justify-center gap-y-4 p-8 relative">

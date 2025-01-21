@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 
 // entities
 import { ConfigProps } from '@/entities/config/config'
+import { GameProps } from '@/entities/game/game'
 
 // lib
 import { api } from '@/lib/axios'
@@ -21,12 +22,13 @@ import { useToast } from '@/hooks/use-toast'
 type HomeTimerProps = {
   parentLoading: boolean
   configs?: ConfigProps
+  nextGame?: GameProps
 }
 
 // variables
 const loc = `@/components/timers/home-timer`
 
-export function HomeTimer({ parentLoading, configs }: HomeTimerProps) {
+export function HomeTimer({ parentLoading, configs, nextGame }: HomeTimerProps) {
   const { user } = useAuthStore()
   const { toast } = useToast()
   const [receivedServerTime, setReceivedServerTime] = useState<string | undefined>()
@@ -102,7 +104,7 @@ export function HomeTimer({ parentLoading, configs }: HomeTimerProps) {
   }, [])
 
   return (
-    <div className={cn('flex w-full', (isLoading || !formattedTime) && 'skeleton-no-bg')}>
+    <div className={cn('flex w-full', (isLoading || !nextGame || !formattedTime) && 'skeleton-no-bg')}>
       <div className="flex-1 flex justify-center items-center rounded-lg border border-2 border-primary-text p-4">
         <span className="font-bold text-primary-text text-6xl">{formattedTime.split(':')[0].substring(0, 1)}</span>
       </div>

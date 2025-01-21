@@ -69,18 +69,18 @@ export function HomeGameContext({ parentLoading, game, winners }: HomeGameContex
     <div className="flex flex-col items-center justify-center gap-y-4 p-8 max-w-[475px] min-w-[475px]">
       {/* PRIZES */}
       <div className="flex gap-x-4 w-full">
-        <div className={cn('flex flex-col items-center justify-center gap-y-2 rounded-md p-2 w-1/3', _hasWinner(winner_prize_type.FIRST) ? 'bg-primary/50 border border-primary-text' : 'bg-accent')}>
-          <span className={cn('w-full text-center text-primary-foreground rounded-lg text-xs font-bold', _hasWinner(winner_prize_type.FIRST) && 'bg-primary-text')}>Prêmio 1</span>
+        <div className={cn('flex flex-col items-center justify-center gap-y-2 rounded-md p-2 w-1/3', !_hasWinner(winner_prize_type.FIRST) ? 'bg-primary/50 border border-primary-text' : 'bg-accent')}>
+          <span className={cn('w-full text-center text-primary-foreground rounded-lg text-xs font-bold', !_hasWinner(winner_prize_type.FIRST) && 'bg-primary-text')}>Prêmio 1</span>
           <span className={cn('text-primary-foreground rounded-lg text-xs', (parentLoading || !game?.firstPrizeValue) && 'skeleton')}>{formatBRL(game.firstPrizeValue)}</span>
         </div>
 
-        <div className={cn('flex flex-col items-center justify-center gap-y-2 rounded-md p-2 w-1/3', _hasWinner(winner_prize_type.SECOND) ? 'bg-primary/50' : 'bg-accent')}>
-          <span className={cn('w-full text-center text-primary-foreground rounded-lg text-xs font-bold', _hasWinner(winner_prize_type.SECOND) && 'bg-primary-text')}>Prêmio 2</span>
+        <div className={cn('flex flex-col items-center justify-center gap-y-2 rounded-md p-2 w-1/3', _hasWinner(winner_prize_type.FIRST) && !_hasWinner(winner_prize_type.SECOND) ? 'bg-primary/50' : 'bg-accent')}>
+          <span className={cn('w-full text-center text-primary-foreground rounded-lg text-xs font-bold', _hasWinner(winner_prize_type.FIRST) && !_hasWinner(winner_prize_type.SECOND) && 'bg-primary-text')}>Prêmio 2</span>
           <span className={cn('text-primary-foreground rounded-lg text-xs', (parentLoading || !game?.secondPrizeValue) && 'skeleton')}>{formatBRL(game.secondPrizeValue)}</span>
         </div>
 
-        <div className={cn('flex flex-col items-center justify-center gap-y-2 rounded-md p-2 w-1/3', _hasWinner(winner_prize_type.THIRD) ? 'bg-primary/50' : 'bg-accent')}>
-          <span className={cn('w-full text-center text-primary-foreground rounded-lg text-xs font-bold', _hasWinner(winner_prize_type.THIRD) && 'bg-primary-text')}>Prêmio 3</span>
+        <div className={cn('flex flex-col items-center justify-center gap-y-2 rounded-md p-2 w-1/3', _hasWinner(winner_prize_type.FIRST) && _hasWinner(winner_prize_type.SECOND) ? 'bg-primary/50' : 'bg-accent')}>
+          <span className={cn('w-full text-center text-primary-foreground rounded-lg text-xs font-bold', _hasWinner(winner_prize_type.FIRST) && _hasWinner(winner_prize_type.SECOND) && 'bg-primary-text')}>Prêmio 3</span>
           <span className={cn('text-primary-foreground rounded-lg text-xs', (parentLoading || !game?.thirdPrizeValue) && 'skeleton')}>{formatBRL(game.thirdPrizeValue)}</span>
         </div>
       </div>

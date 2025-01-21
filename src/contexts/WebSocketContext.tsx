@@ -31,9 +31,12 @@ export const WebSocketProvider = ({ children }: { children: Readonly<ReactNode> 
   const [ws, setWs] = useState<Realtime | null>(null)
   const [wsChannel, setWsChannel] = useState<RealtimeChannel | null>(null)
   const [queue, setQueue] = useState<SetChannelProps[]>([])
+  const [activeChannels, setActiveChannels] = useState<Record<string, boolean>>({})
 
   useEffect(() => {
-    const ably = new Realtime({ key: import.meta.env.VITE_WS_API_KEY })
+    if (ws?.connection?.state === 'connected') return
+
+    const ably = new Realtime({ key: import.meta.env.VITE_WS_API_KEY, clientId: 'test'/* , logLevel: 3 */ })
     let isPageReloading = false
 
     const handleBeforeUnload = () => {
@@ -50,17 +53,29 @@ export const WebSocketProvider = ({ children }: { children: Readonly<ReactNode> 
     ably.connection.on('failed', () => {
       console.error(`Unhandled error at ${loc}.ably.connection.onFailed. Details: ${JSON.stringify(ably.connection.errorReason, null, 2)}`)
 
+      setWs(null)
+      setWsChannel(null)
+      setActiveChannels({})
+
       if (ably.connection.errorReason?.stack) toast({ variant: 'destructive', title: 'Ops ...', description: 'Não foi possível se conectar ao servidor de WebSocket.' })
     })
 
     ably.connection.on('disconnected', () => {
       console.error(`Unhandled error at ${loc}.ably.connection.onDisconnected. Details: ${JSON.stringify(ably.connection.errorReason, null, 2)}`)
 
+      setWs(null)
+      setWsChannel(null)
+      setActiveChannels({})
+
       if (ably.connection.errorReason?.stack) toast({ variant: 'destructive', title: 'Ops ...', description: 'A conexão com o servidor de WebSocket foi perdida.' })
     })
 
     ably.connection.on('suspended', () => {
       console.error(`Unhandled error at ${loc}.ably.connection.onSuspended. Details: ${JSON.stringify(ably.connection.errorReason, null, 2)}`)
+
+      setWs(null)
+      setWsChannel(null)
+      setActiveChannels({})
 
       if (ably.connection.errorReason?.stack) toast({ variant: 'destructive', title: 'Ops ...', description: 'A conexão com o servidor de WebSocket foi suspensa.' })
     })
@@ -71,6 +86,10 @@ export const WebSocketProvider = ({ children }: { children: Readonly<ReactNode> 
 
         if (ably.connection.errorReason?.stack) toast({ variant: 'destructive', title: 'Ops ...', description: 'A conexão com o servidor de WebSocket foi fechada.' })
       }
+
+      setWs(null)
+      setWsChannel(null)
+      setActiveChannels({})
     })
 
     return () => {
@@ -79,79 +98,93 @@ export const WebSocketProvider = ({ children }: { children: Readonly<ReactNode> 
       ably.connection.close()
       ably.close()
       ably.connection.off()
+      setWs(null)
+      setWsChannel(null)
+      setActiveChannels({})
     }
   }, [])
 
   const setChannel = useCallback(
-    async ({ channelName, cb }: SetChannelProps) => {
-      if (ws?.connection?.state != 'connected') {
-        const alreadyAddedToQueue = queue.some(q => q.channelName === channelName)
-        
-        if (!alreadyAddedToQueue) {
-          setQueue(prev => [...prev, { channelName, cb }])
-          console.log('WebSocket instance not connected yet, adding to queue...')
-        } else console.log(`WebSocket instance not connected yet, but ${channelName} is already added to the queue...`)
+    ({ channelName, cb }: SetChannelProps) => {
+      // if is already active
+      if (activeChannels[channelName]) {
+        console.log(`Channel ${channelName} is already active.`)
         return
       }
 
-      if(!['initialized', 'attached', undefined].includes(wsChannel?.state)) {
-        console.log(`WebSocket channel has ${wsChannel?.state} status.`)
+      // waits for ws connection
+      if (!ws || ws?.connection?.state !== 'connected') {
+        const alreadyAddedToQueue = queue.some(q => q.channelName === channelName)
+        if (!alreadyAddedToQueue) {
+          setQueue(prev => [...prev, { channelName, cb }])
+          console.log('WebSocket instance not connected yet, adding to queue...')
+        }
         return
       }
 
       const channel = ws.channels.get(channelName)
 
-      channel.on('attached', () => {
+      channel.on('attached', async () => {
         console.log(`Connected to WebSocket Channel ${channelName}.`)
-        channel.subscribe('message', (msg: InboundMessage) => cb('MESSAGE', msg.data))
+
+        try {
+          await channel.presence.enter({ testando: true })
+        } catch (e) {
+          console.error(`ERRO PRESENCE: `, e)
+        }
+        setActiveChannels(prev => ({ ...prev, [channelName]: true }))
         setWsChannel(channel)
       })
 
-      channel.on('failed', () => {
-        console.error(`Unhandled error at ${loc}.channel.onFailed. Details: ${JSON.stringify(channel.errorReason, null, 2)}`)
+      const _handleStateChange = (state: string) => {
+        console.log(`WebSocket channel ${channelName} is in state: ${state}`)
+        console.error(`Unhandled error at ${loc}.setChannel._handleStateChange. Details: ${JSON.stringify(channel.errorReason, null, 2)}`)
+
+        if (['failed', 'suspended', 'detached'].includes(state)) {
+          setActiveChannels(prev => {
+            const updated = { ...prev }
+            delete updated[channelName]
+            return updated
+          })
+        }
 
         if (channel.errorReason?.stack) {
-          toast({ variant: 'destructive', title: 'Ops ...', description: `Não foi possível se conectar ao canal ${channelName} do servidor de WebSocket.` })
+          toast({ variant: 'destructive', title: 'Ops ...', description: `Ocorreu um erro no canal ${channelName} do servidor de WebSocket.` })
           cb('ERROR', channel.errorReason.stack)
         }
-      })
+      }
 
-      channel.on('suspended', () => {
-        console.error(`Unhandled error at ${loc}.channel.onSuspended. Details: ${JSON.stringify(channel.errorReason, null, 2)}`)
+      channel.on('failed', () => _handleStateChange('failed'))
+      channel.on('suspended', () => _handleStateChange('suspended'))
+      channel.on('detached', () => _handleStateChange('detached'))
 
-        if (channel.errorReason?.stack) {
-          toast({ variant: 'destructive', title: 'Ops ...', description: `A conexão com o canal ${channelName} do servidor de WebSocket foi suspensa.` })
-          cb('ERROR', channel.errorReason.stack)
-        }
-      })
+      channel.subscribe('message', msg => console.log(JSON.stringify(msg)) /* (msg: InboundMessage) => cb('MESSAGE', msg.data) */)
 
-      channel.on('detached', () => {
-        console.error(`Unhandled error at ${loc}.channel.onDetached. Details: ${JSON.stringify(channel.errorReason, null, 2)}`)
-
-        if (channel.errorReason?.stack) {
-          toast({ variant: 'destructive', title: 'Ops ...', description: `A conexão com o canal ${channelName} do servidor de WebSocket foi desanexada.` })
-          cb('ERROR', channel.errorReason.stack)
-        }
-      })
-
-      await channel.subscribe('message', (msg: InboundMessage) => cb('MESSAGE', msg.data))
-      
       return () => {
         console.log(`Closing WebSocket channel connection at ${loc}.setChannel function.`)
         channel.unsubscribe('message')
         channel.detach()
         ws.channels.release(channelName)
         channel.off()
+        setWsChannel(null)
+        setActiveChannels(prev => {
+          const updated = { ...prev }
+          delete updated[channelName]
+          return updated
+        })
       }
     },
-    [ws, wsChannel?.state, queue]
+    [ws, activeChannels, queue]
   )
 
   useEffect(() => {
     if (queue.length && ws?.connection?.state === 'connected') {
+      const unprocessedQueue = queue.slice()
       for (const item of queue) {
         setChannel(item)
+        unprocessedQueue.shift()
       }
+      setQueue(unprocessedQueue)
     }
   }, [queue, ws?.connection?.state, setChannel])
 

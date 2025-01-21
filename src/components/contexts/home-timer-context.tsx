@@ -28,7 +28,7 @@ export function HomeTimerContext({ parentLoading, configs, nextGame }: HomeTimer
       {/* TIMER / NEXT GAME */}
       <div className="bg-foreground flex flex-col gap-y-4 rounded-lg border border-4 border-primary p-4 w-full">
         {/* TIMER */}
-        <HomeTimer parentLoading={parentLoading} configs={configs} />
+        <HomeTimer parentLoading={parentLoading} configs={configs} nextGame={nextGame} />
 
         {/* NEXT GAME */}
         <HomeNextGameSection parentLoading={parentLoading} nextGame={nextGame} />
