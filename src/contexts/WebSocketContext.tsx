@@ -99,11 +99,13 @@ export const WebSocketProvider = ({ children }: { children: Readonly<ReactNode> 
         return
       }
 
-      const channel = ws.channels.get(channelName)
+      // TODO: remover
+      // const channel = ws.channels.get(channelName)
+      const channel = ws.channels.get('test')
 
       channel.on('attached', () => {
         console.log(`Connected to WebSocket Channel ${channelName}.`)
-        channel.subscribe('message', (msg: InboundMessage) => cb('MESSAGE', msg.data))
+        // channel.subscribe('message', (msg: InboundMessage) => cb('MESSAGE', msg.data))
         setWsChannel(channel)
       })
 

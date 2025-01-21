@@ -41,7 +41,7 @@ const loc = `@/pages/Home`
 export default function HomePage() {
   const { user } = useAuthStore()
   const { toast } = useToast()
-  // const { ws, wsChannel, setChannel } = useWebSocket()
+  const { ws, wsChannel, setChannel } = useWebSocket()
   const homeGameContextRef = useRef(null)
   const { configs, loading: isLoadingConfigs } = useConfigs(user?.ref)
   const [isLoading, setIsLoading] = useState<boolean>(false)
@@ -59,8 +59,10 @@ export default function HomePage() {
     try {
       // TODO: testar inverter a ordem
       await api.post('/test')
-      // setChannel({ channelName: 'test', cb: (type, msg) => console.log(`TYPE: ${type}\nMSG:${JSON.stringify(msg, null, 2)}`) })
-      const ably = new Realtime({ key: import.meta.env.VITE_WS_API_KEY })
+      setChannel({ channelName: 'test', cb: (type, msg) => console.log(`TYPE: ${type}\nMSG:${JSON.stringify(msg, null, 2)}`) })
+
+      // TODO: abaixo está funcionando
+      /* const ably = new Realtime({ key: import.meta.env.VITE_WS_API_KEY })
 
       ably.connection.on('connected', async () => {
         console.log(`Connected to WebSocket.`)
@@ -73,7 +75,7 @@ export default function HomePage() {
         })
 
         await channel.subscribe('message', (msg) => console.log(JSON.stringify(msg)))
-      })
+      }) */
     } catch (err) {
       console.error(err)
     }
