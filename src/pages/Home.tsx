@@ -265,6 +265,7 @@ export default function HomePage() {
             break
 
           case WS_GAME_EVENTS.GAME_FINISHED:
+            console.log(`CHAMOU O GAME FINISHED`)
             // eslint-disable-next-line
             /* const { winners } = typeof parsedMsg.data === 'string' ? JSON.parse(parsedMsg.data || '{}') : parsedMsg.data
             setCurrentGame({ ...(currentGameRef.current as GameProps), winners })
