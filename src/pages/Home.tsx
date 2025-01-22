@@ -191,8 +191,8 @@ export default function HomePage() {
     setChannel({ channelName, cb: _channelCb })
 
     // waiting for ws channel connection to be 'attached' if it isn't yet
-    if (wsChannel?.state && wsChannel?.state != 'attached') await waitForWsChannelStateUpdate('attached')
-    console.log(wsChannel?.state)
+    // if (wsChannel?.state && wsChannel?.state != 'attached') await waitForWsChannelStateUpdate('attached')
+    // console.log(wsChannel?.state)
 
     console.log('EVENTOS ATRIBUÍDOS COM SUCESSO AO CANAL: ', channelName) // TODO: remover
   }
@@ -223,10 +223,12 @@ export default function HomePage() {
         switch (parsedMsg?.action) {
           case WS_GAME_EVENTS.GAME_STARTED:
             console.log('CHAMOU O EVENT_STARTED')
-            if (!isShowingLoadingAlertRef.current) setIsShowingLoadingAlert(true)
-
+            
             // refetching updated data
-            if (!currentGameRef.current) await _fetchCurrentGame(true)
+            if (!currentGameRef.current) {
+              if (!isShowingLoadingAlertRef.current) setIsShowingLoadingAlert(true)
+              await _fetchCurrentGame(true)
+            }
             break
 
           case WS_GAME_EVENTS.GAME_START_FAIL:
@@ -248,8 +250,15 @@ export default function HomePage() {
             if (isShowingLoadingAlertRef.current) setIsShowingLoadingAlert(false)
 
             // eslint-disable-next-line
-            const { nextBall } = typeof parsedMsg.data === 'string' ? JSON.parse(parsedMsg.data || '{}') : parsedMsg.data
-            setCurrentGame({ ...currentGameRef.current, balls: [...currentGameRef.current.balls, String(nextBall)] })
+            const { nextBall, previousBall } = typeof parsedMsg.data === 'string' ? JSON.parse(parsedMsg.data || '{}') : parsedMsg.data
+
+            // eslint-disable-next-line
+            const balls = currentGameRef.current.balls.filter(b => ![String(previousBall), String(nextBall)].includes(String(b)))
+
+            if (previousBall) balls.push(previousBall)
+            if (nextBall) balls.push(nextBall)
+
+            setCurrentGame({ ...currentGameRef.current, balls })
             break
 
           case WS_GAME_EVENTS.BALL_DRAW_FAIL:

@@ -165,10 +165,10 @@ export const WebSocketProvider = ({ children }: { children: Readonly<ReactNode> 
     if (queue.length && ws?.connection?.state === 'connected') {
       for (const item of queue) {
         console.log(`LOOPING DA QUEUE`) // TODO: remover
-        if(wsChannel?.state != 'attached' && wsChannel?.name != item.channelName) {
+        if(wsChannel?.name != item.channelName) {
           console.log(`EXECUTANDO A QUEUE: ${wsChannel?.state} ${wsChannel?.name} ${item.channelName}`) // TODO: remover
           setChannel(item)
-        }
+        } else console.log(`QUEUE NÃO ENTROU: ${wsChannel?.state} ${wsChannel?.name} ${item.channelName}`)
       }
     }
   }, [queue, ws?.connection?.state, setChannel])
