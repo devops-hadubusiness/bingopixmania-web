@@ -124,7 +124,7 @@ export default function HomePage() {
 
           // assigning to ws current-game event channel only if hasn't next game
           if (!nextGameRef.current) await _assignWSChannelEvents(`${baseWsChannelName}-${response.data.body[0].ref}`)
-        } else await _fetchNextGame(refetch, true)
+        } else await _fetchNextGame(refetch)
       } else {
         toast({ variant: 'destructive', title: 'Ops ...', description: response.data?.statusMessage || 'Não foi possível buscar o jogo atual.' })
       }
@@ -136,7 +136,7 @@ export default function HomePage() {
     }
   }
 
-  const _fetchNextGame = async (refetch: boolean, overwriteWsChannel: boolean) => {
+  const _fetchNextGame = async (refetch: boolean) => {
     // refetching only when necessary or forced, to update the nextGame
     if (!refetch && (currentGameRef.current || nextGameRef.current)) return
     else console.log(`VAI BUSCAR O NEXT GAME: ${refetch} ${!!currentGameRef.current} ${!!nextGameRef.current}`)
@@ -156,13 +156,11 @@ export default function HomePage() {
       if (response.data?.statusCode === HTTP_STATUS_CODE.OK) {
         setNextGame(response.data.body[0])
 
-        if (overwriteWsChannel || !currentGameRef.current) {
-          // forcing context to be 'TIMER'
-          if (context != 'TIMER') setContext('TIMER')
+        // forcing context to be 'TIMER'
+        if (context != 'TIMER') setContext('TIMER')
 
-          // assigning to ws next-game event channel
-          await _assignWSChannelEvents(`${baseWsChannelName}-${response.data.body[0].ref}`)
-        }
+        // assigning to ws next-game event channel
+        await _assignWSChannelEvents(`${baseWsChannelName}-${response.data.body[0].ref}`)
       } else {
         // assigning to ws placeholder event channel if neither current game nor next game
         if (response.data?.statusCode === HTTP_STATUS_CODE.NOT_FOUND) {
@@ -223,7 +221,7 @@ export default function HomePage() {
         switch (parsedMsg?.action) {
           case WS_GAME_EVENTS.GAME_STARTED:
             console.log('CHAMOU O EVENT_STARTED')
-            
+
             // refetching updated data
             if (!currentGameRef.current) {
               if (!isShowingLoadingAlertRef.current) setIsShowingLoadingAlert(true)
@@ -276,7 +274,7 @@ export default function HomePage() {
           case WS_GAME_EVENTS.GAME_FINISHED:
             console.log(`CHAMOU O GAME FINISHED`)
             // eslint-disable-next-line
-            /* const { winners } = typeof parsedMsg.data === 'string' ? JSON.parse(parsedMsg.data || '{}') : parsedMsg.data
+            const { winners } = typeof parsedMsg.data === 'string' ? JSON.parse(parsedMsg.data || '{}') : parsedMsg.data
             setCurrentGame({ ...(currentGameRef.current as GameProps), winners })
 
             if (!isShowingWinnersAlertRef.current) {
@@ -288,7 +286,7 @@ export default function HomePage() {
             if (contextRef.current != 'TIMER') setTimeout(() => setContext('TIMER'), 2000)
 
             // refetching updated data
-            await Promise.all([_fetchCurrentGame(true), _fetchNextGame(true, true)]) */
+            await _fetchCurrentGame(true)
             break
 
           case WS_GAME_EVENTS.GAME_FINISH_FAIL:
