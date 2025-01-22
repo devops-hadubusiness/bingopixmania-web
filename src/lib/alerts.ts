@@ -8,7 +8,7 @@ export const showLoading = (message: string) => {
     // icon: 'info',
     allowOutsideClick: false,
     allowEscapeKey: false,
-    allowEnterKey: false,
+    // allowEnterKey: false,
     didOpen: () => {
       Swal.showLoading();
     },

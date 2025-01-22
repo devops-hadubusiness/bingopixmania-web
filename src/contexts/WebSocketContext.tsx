@@ -100,7 +100,7 @@ export const WebSocketProvider = ({ children }: { children: Readonly<ReactNode> 
 
         if (!alreadyAddedToQueue) {
           setQueue(prev => [...prev, { channelName, cb }])
-          console.log('WebSocket instance not connected yet, adding to queue...')
+          console.log('WebSocket instance not connected yet, adding to queue...', queue, channelName)
         } else console.log(`WebSocket instance not connected yet, but ${channelName} is already added to the queue...`)
         return
       }
@@ -164,7 +164,11 @@ export const WebSocketProvider = ({ children }: { children: Readonly<ReactNode> 
   useEffect(() => {
     if (queue.length && ws?.connection?.state === 'connected') {
       for (const item of queue) {
-        setChannel(item)
+        console.log(`LOOPING DA QUEUE`)
+        if(wsChannel?.state != 'attached' && wsChannel?.name != item.channelName) {
+          console.log(`EXECUTANDO A QUEUE: ${wsChannel?.state} ${wsChannel?.name} ${item.channelName}`)
+          setChannel(item)
+        }
       }
     }
   }, [queue, ws?.connection?.state, setChannel])

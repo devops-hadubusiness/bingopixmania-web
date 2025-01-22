@@ -29,6 +29,9 @@ import { useAuthStore } from '@/store/auth'
 import { HTTP_STATUS_CODE } from '@/constants/http'
 import { WS_GAME_EVENTS } from '@/constants/ws'
 
+// utils
+import { sleep } from '@/utils/functions-util'
+
 // hooks
 import { useToast } from '@/hooks/use-toast'
 
@@ -43,21 +46,26 @@ const baseWsChannelName = `${import.meta.env.VITE_APP_NAME}-${import.meta.env.VI
 export default function HomePage() {
   const { user } = useAuthStore()
   const { toast } = useToast()
-  const { ws, wsChannel, setChannel } = useWebSocket()
   const { configs, loading: isLoadingConfigs } = useConfigs(user?.ref)
   const [isLoading, setIsLoading] = useState<boolean>(false)
-  const [context, setContext] = useState<ContextProps>('TIMER')
-  const [currentGame, setCurrentGame] = useState<GameProps | undefined>()
-  const [nextGame, setNextGame] = useState<GameProps | undefined>()
-  const [isPlaceholderGame, setIsPlaceholderGame] = useState<Record<string, boolean>>({ fetchedCurrentGame: false, fetchedNextGame: false })
-  const [isShowingLoadingAlert, setIsShowingLoadingAlert] = useState<boolean>(false)
-  const [isShowingWinnersAlert, setIsShowingWinnersAlert] = useState<boolean>(false)
+
+  const { ws, wsChannel, setChannel } = useWebSocket()
   const waitForWsConnectionStateUpdate = useWaitForStateUpdate(ws?.connection?.state)
   const waitForWsChannelStateUpdate = useWaitForStateUpdate(wsChannel?.state)
+
+  const [context, setContext] = useState<ContextProps>('TIMER')
   const contextRef = useRef<ContextProps>(context)
+
+  const [currentGame, setCurrentGame] = useState<GameProps | undefined>()
   const currentGameRef = useRef<GameProps | undefined>(currentGame)
-  const waitForCurrentGameUpdate = useWaitForStateUpdate(currentGameRef.current)
+
+  const [nextGame, setNextGame] = useState<GameProps | undefined>()
+  const nextGameRef = useRef<GameProps | undefined>(nextGame)
+
+  const [isShowingLoadingAlert, setIsShowingLoadingAlert] = useState<boolean>(false)
   const isShowingLoadingAlertRef = useRef<boolean>(isShowingLoadingAlert)
+
+  const [isShowingWinnersAlert, setIsShowingWinnersAlert] = useState<boolean>(false)
   const isShowingWinnersAlertRef = useRef<boolean>(isShowingWinnersAlert)
 
   // TODO: remover
@@ -66,26 +74,34 @@ export default function HomePage() {
       setIsLoading(true)
       setIsShowingLoadingAlert(true)
 
+      // TODO: testando sem esperar dar o attach (na mao com banco vazio)
       // waiting for ws placeholder event channel to be attached before call the api
-      if (wsChannel?.state != 'attached') await waitForWsChannelStateUpdate('attached')
+      // console.log('Waiting for ws channel to be attached ...')
+      // if (!currentGame && !nextGame && wsChannel?.state != 'attached') await waitForWsChannelStateUpdate('attached')
+      // console.log('Ws channel attached!')
 
+      console.warn(`STARTING NEXT GAME: ${currentGameRef.current} ${nextGameRef.current}`)
       const response = await api.post(`/start-next-game`)
 
       if (response.data?.statusCode === HTTP_STATUS_CODE.OK) {
-        await _fetchCurrentGame(true)
-        toast({ variant: 'success', title: 'Sucesso', description: 'Jogo iniciado com sucesso.' })
+        if (isShowingLoadingAlertRef.current) setIsShowingLoadingAlert(false)
+
+        // only refetching currentGame for update the data, if the next game isn't exists. If it exists, the currentGame will be updated by the GAME_STARTED event
+        console.warn(`AFTER STARTED NEXT GAME: ${currentGameRef.current} ${nextGameRef.current}`)
+        if (!currentGameRef.current && !nextGameRef.current) await _fetchCurrentGame(true)
       } else toast({ variant: 'destructive', title: 'Ops ...', description: 'Não foi possível iniciar o jogo.' })
     } catch (err) {
       console.error(`Unhandled rejection at ${loc}._handleStartNextGame function. Details: ${err}`)
       toast({ variant: 'destructive', title: 'Ops ...', description: 'Não foi possível iniciar o jogo.' })
     } finally {
       setIsLoading(false)
-      setIsShowingLoadingAlert(false)
     }
   }
 
   const _fetchCurrentGame = async (refetch: boolean) => {
-    if (!refetch && (currentGame || nextGame)) return // refetching only when necessary to update the currentGame
+    // refetching only when necessary or forced, to update the currentGame
+    if (!refetch && (!!currentGameRef.current || !!nextGameRef.current)) return
+    else console.log(`VAI BUSCAR O CURRENT GAME: ${refetch} ${!!currentGameRef.current} ${!!nextGameRef.current}`)
 
     try {
       setIsLoading(true)
@@ -96,7 +112,9 @@ export default function HomePage() {
           userRef: user?.ref
         }
       })
+
       console.log(response.data) // TODO: remover
+
       if ([HTTP_STATUS_CODE.OK, HTTP_STATUS_CODE.NOT_FOUND].includes(response.data?.statusCode)) {
         setCurrentGame(response.data.body?.[0])
 
@@ -104,9 +122,9 @@ export default function HomePage() {
           // forcing context to be 'GAME'
           if (contextRef.current != 'GAME') setContext('GAME')
 
-          // assigning to ws current-game event channel
-          await _assignWSChannelEvents(`${baseWsChannelName}-${response.data.body[0].ref}`)
-        }
+          // assigning to ws current-game event channel only if hasn't next game
+          if (!nextGameRef.current) await _assignWSChannelEvents(`${baseWsChannelName}-${response.data.body[0].ref}`)
+        } else await _fetchNextGame(refetch, true)
       } else {
         toast({ variant: 'destructive', title: 'Ops ...', description: response.data?.statusMessage || 'Não foi possível buscar o jogo atual.' })
       }
@@ -115,12 +133,13 @@ export default function HomePage() {
       toast({ variant: 'destructive', title: 'Ops ...', description: 'Não foi possível buscar o jogo atual.' })
     } finally {
       setIsLoading(false)
-      setIsPlaceholderGame(prev => ({ ...prev, fetchedCurrentGame: true }))
     }
   }
 
   const _fetchNextGame = async (refetch: boolean, overwriteWsChannel: boolean) => {
-    if (!refetch && (currentGame || nextGame)) return // refetching only when necessary to update the nextGame
+    // refetching only when necessary or forced, to update the nextGame
+    if (!refetch && (currentGameRef.current || nextGameRef.current)) return
+    else console.log(`VAI BUSCAR O NEXT GAME: ${refetch} ${!!currentGameRef.current} ${!!nextGameRef.current}`)
 
     try {
       setIsLoading(true)
@@ -133,10 +152,11 @@ export default function HomePage() {
       })
 
       console.log(response.data) // TODO: remover
+
       if (response.data?.statusCode === HTTP_STATUS_CODE.OK) {
         setNextGame(response.data.body[0])
 
-        if (overwriteWsChannel || !currentGame) {
+        if (overwriteWsChannel || !currentGameRef.current) {
           // forcing context to be 'TIMER'
           if (context != 'TIMER') setContext('TIMER')
 
@@ -144,20 +164,16 @@ export default function HomePage() {
           await _assignWSChannelEvents(`${baseWsChannelName}-${response.data.body[0].ref}`)
         }
       } else {
-        if (import.meta.env.VITE_NODE_ENV != 'development') toast({ variant: 'destructive', title: 'Ops ...', description: response.data?.statusMessage || 'Não foi possível buscar o próximo jogo.' })
-
-        // assigning to ws placeholder event channel
-        if(response.data?.statusCode === HTTP_STATUS_CODE.NOT_FOUND) {
+        // assigning to ws placeholder event channel if neither current game nor next game
+        if (response.data?.statusCode === HTTP_STATUS_CODE.NOT_FOUND) {
           await _assignWSChannelEvents(`${baseWsChannelName}-placeholder`)
         }
-        console.warn(isPlaceholderGame)
       }
     } catch (err) {
       console.error(`Unhandled rejection at ${loc}._fetchNextGame function. Details: ${err}`)
       toast({ variant: 'destructive', title: 'Ops ...', description: 'Não foi possível buscar o próximo jogo.' })
     } finally {
       setIsLoading(false)
-      setIsPlaceholderGame(prev => ({ ...prev, fetchedNextGame: true }))
     }
   }
 
@@ -166,16 +182,17 @@ export default function HomePage() {
     // if (wsChannel?.state === 'attached' && wsChannel?.name != channelName) await _unassignWSChannelEvents(wsChannel?.name)
 
     // waiting for ws connection to be connected before call the api
-    if (ws?.connection?.state != 'connected') {
+    /* if (ws?.connection?.state != 'connected') {
       console.log('Waiting for WS connection...')
       await waitForWsConnectionStateUpdate('connected')
-    }
+    } */
 
     console.log('ATRIBUÍNDO EVENTOS AO CANAL: ', channelName) // TODO: remover
     setChannel({ channelName, cb: _channelCb })
 
     // waiting for ws channel connection to be 'attached' if it isn't yet
     if (wsChannel?.state && wsChannel?.state != 'attached') await waitForWsChannelStateUpdate('attached')
+    console.log(wsChannel?.state)
 
     console.log('EVENTOS ATRIBUÍDOS COM SUCESSO AO CANAL: ', channelName) // TODO: remover
   }
@@ -206,9 +223,10 @@ export default function HomePage() {
         switch (parsedMsg?.action) {
           case WS_GAME_EVENTS.GAME_STARTED:
             console.log('CHAMOU O EVENT_STARTED')
+            if (!isShowingLoadingAlertRef.current) setIsShowingLoadingAlert(true)
 
-            /* // refetching updated data
-            await _fetchCurrentGame(true) */
+            // refetching updated data
+            if (!currentGameRef.current) await _fetchCurrentGame(true)
             break
 
           case WS_GAME_EVENTS.GAME_START_FAIL:
@@ -219,18 +237,10 @@ export default function HomePage() {
           case WS_GAME_EVENTS.BALL_DRAW:
             console.log('CHAMOU O BALL_DRAW')
 
-            if (!currentGameRef.current?.balls?.length) {
-              if (!isShowingLoadingAlert) setIsShowingLoadingAlert(true)
-
-              console.warn('fetching current game again ...')
-
-              // refetching updated data
-              await _fetchCurrentGame(true)
-
-              console.warn('waiting')
-              await waitForCurrentGameUpdate('defined')
-              console.warn('passed', currentGameRef.current)
-              // return
+            // if hasn't fetched currentGame yet, waits
+            if (!currentGameRef.current) {
+              if (!isShowingLoadingAlertRef.current) setIsShowingLoadingAlert(true)
+              return
             }
 
             // forcing context to be 'GAME'
@@ -239,7 +249,7 @@ export default function HomePage() {
 
             // eslint-disable-next-line
             const { nextBall } = typeof parsedMsg.data === 'string' ? JSON.parse(parsedMsg.data || '{}') : parsedMsg.data
-            setCurrentGame({ ...(currentGameRef.current as GameProps), balls: [...(currentGameRef.current as GameProps).balls, String(nextBall)] })
+            setCurrentGame({ ...currentGameRef.current, balls: [...currentGameRef.current.balls, String(nextBall)] })
             break
 
           case WS_GAME_EVENTS.BALL_DRAW_FAIL:
@@ -256,7 +266,7 @@ export default function HomePage() {
 
           case WS_GAME_EVENTS.GAME_FINISHED:
             // eslint-disable-next-line
-            const { winners } = typeof parsedMsg.data === 'string' ? JSON.parse(parsedMsg.data || '{}') : parsedMsg.data
+            /* const { winners } = typeof parsedMsg.data === 'string' ? JSON.parse(parsedMsg.data || '{}') : parsedMsg.data
             setCurrentGame({ ...(currentGameRef.current as GameProps), winners })
 
             if (!isShowingWinnersAlertRef.current) {
@@ -268,7 +278,7 @@ export default function HomePage() {
             if (contextRef.current != 'TIMER') setTimeout(() => setContext('TIMER'), 2000)
 
             // refetching updated data
-            await Promise.all([_fetchCurrentGame(true), _fetchNextGame(true, true)])
+            await Promise.all([_fetchCurrentGame(true), _fetchNextGame(true, true)]) */
             break
 
           case WS_GAME_EVENTS.GAME_FINISH_FAIL:
@@ -294,10 +304,13 @@ export default function HomePage() {
 
   // both games observer
   useEffect(() => {
-    if (!currentGame) _fetchCurrentGame(false)
-    if (!nextGame) _fetchNextGame(false, false)
-
     currentGameRef.current = currentGame
+    nextGameRef.current = nextGame
+
+    if (!currentGameRef.current) {
+      console.log(`TRIGGOU USE EFFECT: ${!!currentGameRef.current} ${!!nextGameRef.current}`)
+      _fetchCurrentGame(false)
+    }
   }, [currentGame, nextGame])
 
   // loading alert observer
@@ -316,10 +329,6 @@ export default function HomePage() {
 
     isShowingWinnersAlertRef.current = isShowingWinnersAlert
   }, [isShowingWinnersAlert])
-
-  useEffect(() => {
-    console.log(isPlaceholderGame)
-  }, [isPlaceholderGame])
 
   return (
     <div className="flex w-full flex-col items-center justify-center gap-y-4 p-8 relative">
