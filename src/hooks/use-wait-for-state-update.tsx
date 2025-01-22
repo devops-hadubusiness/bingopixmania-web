@@ -8,7 +8,10 @@ export function useWaitForStateUpdate(state) {
     if (resolverRef.current) {
       const { targetValue, resolve } = resolverRef.current
 
-      if (state === targetValue) {
+      if (targetValue === 'defined' && !!state) {
+        resolve()
+        resolverRef.current = null
+      } else if (targetValue != 'defined' && state === targetValue) {
         resolve()
         resolverRef.current = null
       }

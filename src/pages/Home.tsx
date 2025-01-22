@@ -52,6 +52,7 @@ export default function HomePage() {
   const waitForWsChannelStateUpdate = useWaitForStateUpdate(wsChannel?.state)
   const contextRef = useRef<ContextProps>(context)
   const currentGameRef = useRef<GameProps | undefined>(currentGame)
+  const waitForCurrentGameUpdate = useWaitForStateUpdate(currentGameRef.current)
   const isShowingLoadingAlertRef = useRef<boolean>(isShowingLoadingAlert)
   const isShowingWinnersAlertRef = useRef<boolean>(isShowingWinnersAlert)
 
@@ -76,7 +77,7 @@ export default function HomePage() {
   }
 
   const _fetchCurrentGame = async (refetch: boolean) => {
-    if (!refetch && currentGame) return // refetching only when necessary to update the currentGame
+    if (!refetch && (currentGame || nextGame)) return // refetching only when necessary to update the currentGame
 
     try {
       setIsLoading(true)
@@ -182,8 +183,10 @@ export default function HomePage() {
 
         switch (parsedMsg?.action) {
           case WS_GAME_EVENTS.GAME_STARTED:
-            // refetching updated data
-            await _fetchCurrentGame(true)
+            console.log('CHAMOU O EVENT_STARTED')
+
+            /* // refetching updated data
+            await _fetchCurrentGame(true) */
             break
 
           case WS_GAME_EVENTS.GAME_START_FAIL:
@@ -192,6 +195,22 @@ export default function HomePage() {
             break
 
           case WS_GAME_EVENTS.BALL_DRAW:
+            console.log('CHAMOU O BALL_DRAW')
+
+            if(!currentGameRef.current?.balls?.length) {
+              if(!isShowingLoadingAlert) setIsShowingLoadingAlert(true)
+              
+              console.warn('fetching current game again ...')
+
+              // refetching updated data
+              await _fetchCurrentGame(true)
+
+              console.warn('waiting')
+              await waitForCurrentGameUpdate('defined')
+              console.warn('passed', currentGameRef.current)
+              // return
+            }
+
             // forcing context to be 'GAME'
             if (contextRef.current != 'GAME') setContext('GAME')
             if (isShowingLoadingAlertRef.current) setIsShowingLoadingAlert(false)
