@@ -98,11 +98,13 @@ export function HomeGameContext({ parentLoading, game }: HomeGameContextProps) {
             <span className={cn('text-primary-foreground rounded-lg text-xs', (parentLoading || !game?.ticketPrice) && 'skeleton')}>{formatBRL(game.ticketPrice)}</span>
           </div>
 
+          {/* TODO: ver se está certo a data do jogo */}
           <div className="w-full flex flex-col items-center justify-center gap-y-2 rounded-md border border-primary-text p-2 bg-primary/50">
             <span className="w-full text-center bg-primary-text text-primary-foreground rounded-lg text-xs font-bold">Data</span>
             <span className={cn('text-primary-foreground rounded-lg text-xs', (parentLoading || !game?.dateTime) && 'skeleton')}>{format(new Date(game.dateTime), 'dd/MM/yyyy', { timeZone })}</span>
           </div>
 
+          {/* TODO: ver se está certo a hora do jogo */}
           <div className="w-full flex flex-col items-center justify-center gap-y-2 rounded-md border border-primary-text p-2 bg-primary/50">
             <span className="w-full text-center bg-primary-text text-primary-foreground rounded-lg text-xs font-bold">Hora</span>
             <span className={cn('text-primary-foreground rounded-lg text-xs', (parentLoading || !game?.dateTime) && 'skeleton')}>{format(new Date(game.dateTime), 'HH:mm:ss', { timeZone })}</span>
