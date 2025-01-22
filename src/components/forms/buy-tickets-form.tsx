@@ -73,8 +73,6 @@ export function BuyTicketsForm({ parentLoading, configs, game }: BuyTicketsFormP
         action: 'tickets'
       })
 
-      console.log(response.data)
-
       if (response.data?.statusCode === HTTP_STATUS_CODE.CREATED) {
         toast({ variant: 'info', title: 'TODO', description: 'Antes de comprar vai mostrar o modal de pix.' })
         showSuccess('Cartelas compradas com sucesso')

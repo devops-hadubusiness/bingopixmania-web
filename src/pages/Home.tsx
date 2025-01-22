@@ -1,10 +1,12 @@
 // packages
 import { useState, useEffect, useRef } from 'react'
+import { Dices } from 'lucide-react'
 
 // components
 import { Button } from '@/components/ui/button'
 import { HomeTimerContext } from '@/components/contexts/home-timer-context'
 import { HomeGameContext } from '@/components/contexts/home-game-context'
+import { CustomNoData } from '@/components/data/custom-no-data'
 
 // entities
 import { game_status, GameProps } from '@/entities/game/game'
@@ -47,8 +49,10 @@ export default function HomePage() {
   const [context, setContext] = useState<ContextProps>('TIMER')
   const [currentGame, setCurrentGame] = useState<GameProps | undefined>()
   const [nextGame, setNextGame] = useState<GameProps | undefined>()
+  const [isPlaceholderGame, setIsPlaceholderGame] = useState<Record<string, boolean>>({ fetchedCurrentGame: false, fetchedNextGame: false })
   const [isShowingLoadingAlert, setIsShowingLoadingAlert] = useState<boolean>(false)
   const [isShowingWinnersAlert, setIsShowingWinnersAlert] = useState<boolean>(false)
+  const waitForWsConnectionStateUpdate = useWaitForStateUpdate(ws?.connection?.state)
   const waitForWsChannelStateUpdate = useWaitForStateUpdate(wsChannel?.state)
   const contextRef = useRef<ContextProps>(context)
   const currentGameRef = useRef<GameProps | undefined>(currentGame)
@@ -60,19 +64,23 @@ export default function HomePage() {
   const _handleStartNextGame = async () => {
     try {
       setIsLoading(true)
+      setIsShowingLoadingAlert(true)
 
-      // assigning to ws placeholder event channel before call the api
-      await _assignWSChannelEvents(`${baseWsChannelName}-placeholder`)
+      // waiting for ws placeholder event channel to be attached before call the api
+      if (wsChannel?.state != 'attached') await waitForWsChannelStateUpdate('attached')
 
       const response = await api.post(`/start-next-game`)
 
-      if (response.data?.statusCode === HTTP_STATUS_CODE.OK) toast({ variant: 'success', title: 'Sucesso', description: 'Jogo iniciado com sucesso.' })
-      else toast({ variant: 'destructive', title: 'Ops ...', description: 'Não foi possível iniciar o jogo.' })
+      if (response.data?.statusCode === HTTP_STATUS_CODE.OK) {
+        await _fetchCurrentGame(true)
+        toast({ variant: 'success', title: 'Sucesso', description: 'Jogo iniciado com sucesso.' })
+      } else toast({ variant: 'destructive', title: 'Ops ...', description: 'Não foi possível iniciar o jogo.' })
     } catch (err) {
       console.error(`Unhandled rejection at ${loc}._handleStartNextGame function. Details: ${err}`)
       toast({ variant: 'destructive', title: 'Ops ...', description: 'Não foi possível iniciar o jogo.' })
     } finally {
       setIsLoading(false)
+      setIsShowingLoadingAlert(false)
     }
   }
 
@@ -107,6 +115,7 @@ export default function HomePage() {
       toast({ variant: 'destructive', title: 'Ops ...', description: 'Não foi possível buscar o jogo atual.' })
     } finally {
       setIsLoading(false)
+      setIsPlaceholderGame(prev => ({ ...prev, fetchedCurrentGame: true }))
     }
   }
 
@@ -136,18 +145,31 @@ export default function HomePage() {
         }
       } else {
         if (import.meta.env.VITE_NODE_ENV != 'development') toast({ variant: 'destructive', title: 'Ops ...', description: response.data?.statusMessage || 'Não foi possível buscar o próximo jogo.' })
+
+        // assigning to ws placeholder event channel
+        if(response.data?.statusCode === HTTP_STATUS_CODE.NOT_FOUND) {
+          await _assignWSChannelEvents(`${baseWsChannelName}-placeholder`)
+        }
+        console.warn(isPlaceholderGame)
       }
     } catch (err) {
       console.error(`Unhandled rejection at ${loc}._fetchNextGame function. Details: ${err}`)
       toast({ variant: 'destructive', title: 'Ops ...', description: 'Não foi possível buscar o próximo jogo.' })
     } finally {
       setIsLoading(false)
+      setIsPlaceholderGame(prev => ({ ...prev, fetchedNextGame: true }))
     }
   }
 
   const _assignWSChannelEvents = async (channelName: string) => {
     // unassigning if the target channel is differente than the already assigned one
-    if (wsChannel?.state === 'attached' && wsChannel?.name != channelName) await _unassignWSChannelEvents(wsChannel?.name)
+    // if (wsChannel?.state === 'attached' && wsChannel?.name != channelName) await _unassignWSChannelEvents(wsChannel?.name)
+
+    // waiting for ws connection to be connected before call the api
+    if (ws?.connection?.state != 'connected') {
+      console.log('Waiting for WS connection...')
+      await waitForWsConnectionStateUpdate('connected')
+    }
 
     console.log('ATRIBUÍNDO EVENTOS AO CANAL: ', channelName) // TODO: remover
     setChannel({ channelName, cb: _channelCb })
@@ -197,9 +219,9 @@ export default function HomePage() {
           case WS_GAME_EVENTS.BALL_DRAW:
             console.log('CHAMOU O BALL_DRAW')
 
-            if(!currentGameRef.current?.balls?.length) {
-              if(!isShowingLoadingAlert) setIsShowingLoadingAlert(true)
-              
+            if (!currentGameRef.current?.balls?.length) {
+              if (!isShowingLoadingAlert) setIsShowingLoadingAlert(true)
+
               console.warn('fetching current game again ...')
 
               // refetching updated data
@@ -295,6 +317,10 @@ export default function HomePage() {
     isShowingWinnersAlertRef.current = isShowingWinnersAlert
   }, [isShowingWinnersAlert])
 
+  useEffect(() => {
+    console.log(isPlaceholderGame)
+  }, [isPlaceholderGame])
+
   return (
     <div className="flex w-full flex-col items-center justify-center gap-y-4 p-8 relative">
       {/* TODO: remover esse botão */}
@@ -304,7 +330,12 @@ export default function HomePage() {
         </Button>
       )}
 
-      {(context === 'TIMER' || currentGame?.status != game_status.RUNNING) && <HomeTimerContext parentLoading={isLoading} configs={configs} nextGame={nextGame} />}
+      {context === 'TIMER' && !isLoading && !nextGame && (
+        <CustomNoData title="Nenhum jogo encontrado" description="Aguarde o início de um jogo para participar." icon={Dices} iconClass={'size-16'} className="mt-16 smAndDown:min-w-screen smAndDown:max-w-screen mdAndUp:max-w-[475px] mdAndUp:min-w-[475px]" />
+      )}
+
+      {context === 'TIMER' && (isLoading || !!nextGame) && <HomeTimerContext parentLoading={isLoading} configs={configs} nextGame={nextGame} />}
+
       {context === 'GAME' && currentGameRef.current?.status === game_status.RUNNING && <HomeGameContext parentLoading={isLoading} game={currentGameRef.current} />}
     </div>
   )
