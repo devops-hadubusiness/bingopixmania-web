@@ -37,6 +37,7 @@ import { useToast } from '@/hooks/use-toast'
 
 // types
 import { WSChannelMessageTypeProps, WSGameEventProps } from '@/types/ws-types'
+import { RealtimeChannel } from 'ably'
 export type ContextProps = 'TIMER' | 'GAME'
 
 // variables
@@ -50,6 +51,7 @@ export default function HomePage() {
   const [isLoading, setIsLoading] = useState<boolean>(false)
 
   const { ws, wsChannel, setChannel } = useWebSocket()
+  const wsChannelRef = useRef<RealtimeChannel | null>(wsChannel)
   const waitForWsConnectionStateUpdate = useWaitForStateUpdate(ws?.connection?.state)
   const waitForWsChannelStateUpdate = useWaitForStateUpdate(wsChannel?.state)
 
@@ -123,6 +125,7 @@ export default function HomePage() {
           if (contextRef.current != 'GAME') setContext('GAME')
 
           // assigning to ws current-game event channel only if hasn't next game
+          console.warn(`NOME DO WS NO MOMENTO: ${wsChannelRef.current?.name} | EXISTE CURRENT ? ${!!currentGameRef.current} | EXISTE NEXT ? ${!!nextGameRef.current}`)
           if (!nextGameRef.current) await _assignWSChannelEvents(`${baseWsChannelName}-${response.data.body[0].ref}`)
         } else await _fetchNextGame(refetch)
       } else {
@@ -176,43 +179,14 @@ export default function HomePage() {
   }
 
   const _assignWSChannelEvents = async (channelName: string) => {
-    // unassigning if the target channel is differente than the already assigned one
-    // if (wsChannel?.state === 'attached' && wsChannel?.name != channelName) await _unassignWSChannelEvents(wsChannel?.name)
-
-    // waiting for ws connection to be connected before call the api
-    /* if (ws?.connection?.state != 'connected') {
-      console.log('Waiting for WS connection...')
-      await waitForWsConnectionStateUpdate('connected')
-    } */
-
     console.log('ATRIBUÍNDO EVENTOS AO CANAL: ', channelName) // TODO: remover
     setChannel({ channelName, cb: _channelCb })
-
-    // waiting for ws channel connection to be 'attached' if it isn't yet
-    // if (wsChannel?.state && wsChannel?.state != 'attached') await waitForWsChannelStateUpdate('attached')
-    // console.log(wsChannel?.state)
-
     console.log('EVENTOS ATRIBUÍDOS COM SUCESSO AO CANAL: ', channelName) // TODO: remover
-  }
-
-  const _unassignWSChannelEvents = async (channelName: string) => {
-    try {
-      if (wsChannel?.state === 'attached' && wsChannel?.name === channelName) {
-        wsChannel.unsubscribe('message')
-        await wsChannel.detach()
-        ws?.channels.release(channelName)
-        wsChannel.off()
-      }
-    } catch (err) {
-      console.error(`Unhandled rejection at ${loc}._unassignWSChannelEvents function. Details: ${err}`)
-      toast({ variant: 'destructive', title: 'Ops ...', description: 'Não foi possível desanexar os eventos do servidor de WebSocket.' })
-    }
   }
 
   const _channelCb = async (channelName: string, type: WSChannelMessageTypeProps, msg: string) => {
     try {
       if (type === 'ERROR') {
-        // if(import.meta.env.VITE_NODE_ENV != 'development') toast({ variant: 'destructive', title: 'Ops ...', description: msg || 'Ocorreu um erro na comunicação com o servidor de jogo.' })
         console.error(`Unhandled error received on WebSocket channel callback. Details: ${JSON.stringify({ channelName, type, msg })}`)
         return
       } else if (type === 'MESSAGE') {
@@ -293,6 +267,9 @@ export default function HomePage() {
             await showError('Não foi possível finalizar o jogo. Atualize a página e tente novamente.')
             location.reload()
             break
+
+          default:
+            console.error(`Msg action not recognized: ${JSON.stringify(parsedMsg, null, 2)}`)
         }
       } else toast({ variant: 'destructive', title: 'Ops ...', description: 'Tipo de evento não reconhecido.' })
     } catch (err) {
@@ -337,6 +314,10 @@ export default function HomePage() {
 
     isShowingWinnersAlertRef.current = isShowingWinnersAlert
   }, [isShowingWinnersAlert])
+
+  useEffect(() => {
+    wsChannelRef.current = wsChannel
+  }, [wsChannel])
 
   return (
     <div className="flex w-full flex-col items-center justify-center gap-y-4 p-8 relative">
