@@ -56,27 +56,31 @@ export const WebSocketProvider = ({ children }: { children: Readonly<ReactNode> 
 
     ably.connection.on('failed', () => {
       console.error(`Unhandled error at ${loc}.ably.connection.onFailed. Details: ${JSON.stringify(ably.connection.errorReason, null, 2)}`)
-
-      if (ably.connection.errorReason?.stack) toast({ variant: 'destructive', title: 'Ops ...', description: 'Não foi possível se conectar ao servidor de WebSocket.' })
+      
+      // TODO: descomentar
+      // if (ably.connection.errorReason?.stack && import.meta.env.VITE_NODE_ENV === 'development') toast({ variant: 'destructive', title: 'Ops ...', description: 'Não foi possível se conectar ao servidor de WebSocket.' })
     })
 
     ably.connection.on('disconnected', () => {
       console.error(`Unhandled error at ${loc}.ably.connection.onDisconnected. Details: ${JSON.stringify(ably.connection.errorReason, null, 2)}`)
 
-      if (ably.connection.errorReason?.stack) toast({ variant: 'destructive', title: 'Ops ...', description: 'A conexão com o servidor de WebSocket foi perdida.' })
+      // TODO: descomentar
+      // if (ably.connection.errorReason?.stack && import.meta.env.VITE_NODE_ENV === 'development') toast({ variant: 'destructive', title: 'Ops ...', description: 'A conexão com o servidor de WebSocket foi perdida.' })
     })
 
     ably.connection.on('suspended', () => {
       console.error(`Unhandled error at ${loc}.ably.connection.onSuspended. Details: ${JSON.stringify(ably.connection.errorReason, null, 2)}`)
 
-      if (ably.connection.errorReason?.stack) toast({ variant: 'destructive', title: 'Ops ...', description: 'A conexão com o servidor de WebSocket foi suspensa.' })
+      // TODO: descomentar
+      // if (ably.connection.errorReason?.stack && import.meta.env.VITE_NODE_ENV === 'development') toast({ variant: 'destructive', title: 'Ops ...', description: 'A conexão com o servidor de WebSocket foi suspensa.' })
     })
 
     ably.connection.on('closed', () => {
       if (!isPageReloading) {
         console.error(`Unhandled error at ${loc}.ably.connection.onClosed. Details: ${JSON.stringify(ably.connection.errorReason, null, 2)}`)
 
-        if (ably.connection.errorReason?.stack) toast({ variant: 'destructive', title: 'Ops ...', description: 'A conexão com o servidor de WebSocket foi fechada.' })
+        // TODO: descomentar
+        // if (ably.connection.errorReason?.stack && import.meta.env.VITE_NODE_ENV === 'development') toast({ variant: 'destructive', title: 'Ops ...', description: 'A conexão com o servidor de WebSocket foi fechada.' })
       }
     })
 
@@ -118,7 +122,8 @@ export const WebSocketProvider = ({ children }: { children: Readonly<ReactNode> 
         console.error(`Unhandled error at ${loc}.channel.onFailed. Details: ${JSON.stringify(channel.errorReason, null, 2)}`)
 
         if (channel.errorReason?.stack) {
-          toast({ variant: 'destructive', title: 'Ops ...', description: `Não foi possível se conectar ao canal ${channelName} do servidor de WebSocket.` })
+          // TODO: descomentar
+          // if (import.meta.env.VITE_NODE_ENV === 'development') toast({ variant: 'destructive', title: 'Ops ...', description: `Não foi possível se conectar ao canal ${channelName} do servidor de WebSocket.` })
           cb(channel.name, 'ERROR', channel.errorReason.stack)
         }
       })
@@ -127,7 +132,8 @@ export const WebSocketProvider = ({ children }: { children: Readonly<ReactNode> 
         console.error(`Unhandled error at ${loc}.channel.onSuspended. Details: ${JSON.stringify(channel.errorReason, null, 2)}`)
 
         if (channel.errorReason?.stack) {
-          toast({ variant: 'destructive', title: 'Ops ...', description: `A conexão com o canal ${channelName} do servidor de WebSocket foi suspensa.` })
+          // TODO: descomentar
+          // if (import.meta.env.VITE_NODE_ENV === 'development') toast({ variant: 'destructive', title: 'Ops ...', description: `A conexão com o canal ${channelName} do servidor de WebSocket foi suspensa.` })
           cb(channel.name, 'ERROR', channel.errorReason.stack)
         }
       })
@@ -136,7 +142,8 @@ export const WebSocketProvider = ({ children }: { children: Readonly<ReactNode> 
         console.error(`Unhandled error at ${loc}.channel.onDetached. Details: ${JSON.stringify(channel.errorReason, null, 2)}`)
 
         if (channel.errorReason?.stack) {
-          toast({ variant: 'destructive', title: 'Ops ...', description: `A conexão com o canal ${channelName} do servidor de WebSocket foi desanexada.` })
+          // TODO: descomentar
+          // if (import.meta.env.VITE_NODE_ENV === 'development') toast({ variant: 'destructive', title: 'Ops ...', description: `A conexão com o canal ${channelName} do servidor de WebSocket foi desanexada.` })
           cb(channel.name, 'ERROR', channel.errorReason.stack)
         }
       })

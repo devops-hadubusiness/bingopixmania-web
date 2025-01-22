@@ -87,7 +87,7 @@ export default function HomePage() {
           userRef: user?.ref
         }
       })
-
+      console.log(response.data) // TODO: remover
       if ([HTTP_STATUS_CODE.OK, HTTP_STATUS_CODE.NOT_FOUND].includes(response.data?.statusCode)) {
         setCurrentGame(response.data.body?.[0])
 
@@ -95,12 +95,12 @@ export default function HomePage() {
           // forcing context to be 'GAME'
           if (contextRef.current != 'GAME') setContext('GAME')
 
-          if (!isShowingLoadingAlert) setIsShowingLoadingAlert(true)
-
           // assigning to ws current-game event channel
           await _assignWSChannelEvents(`${baseWsChannelName}-${response.data.body[0].ref}`)
         }
-      } else toast({ variant: 'destructive', title: 'Ops ...', description: response.data?.statusMessage || 'Não foi possível buscar o jogo atual.' })
+      } else {
+        toast({ variant: 'destructive', title: 'Ops ...', description: response.data?.statusMessage || 'Não foi possível buscar o jogo atual.' })
+      }
     } catch (err) {
       console.error(`Unhandled rejection at ${loc}._fetchCurrentGame function. Details: ${err}`)
       toast({ variant: 'destructive', title: 'Ops ...', description: 'Não foi possível buscar o jogo atual.' })
@@ -110,7 +110,7 @@ export default function HomePage() {
   }
 
   const _fetchNextGame = async (refetch: boolean, overwriteWsChannel: boolean) => {
-    if (!refetch && nextGame) return // refetching only when necessary to update the nextGame
+    if (!refetch && (currentGame || nextGame)) return // refetching only when necessary to update the nextGame
 
     try {
       setIsLoading(true)
@@ -122,14 +122,13 @@ export default function HomePage() {
         }
       })
 
+      console.log(response.data) // TODO: remover
       if (response.data?.statusCode === HTTP_STATUS_CODE.OK) {
         setNextGame(response.data.body[0])
 
         if (overwriteWsChannel || !currentGame) {
           // forcing context to be 'TIMER'
           if (context != 'TIMER') setContext('TIMER')
-            
-          if (isShowingLoadingAlert) setIsShowingLoadingAlert(false)
 
           // assigning to ws next-game event channel
           await _assignWSChannelEvents(`${baseWsChannelName}-${response.data.body[0].ref}`)
@@ -175,7 +174,8 @@ export default function HomePage() {
   const _channelCb = async (channelName: string, type: WSChannelMessageTypeProps, msg: string) => {
     try {
       if (type === 'ERROR') {
-        toast({ variant: 'destructive', title: 'Ops ...', description: msg || 'Ocorreu um erro na comunicação com o servidor de jogo.' })
+        // if(import.meta.env.VITE_NODE_ENV != 'development') toast({ variant: 'destructive', title: 'Ops ...', description: msg || 'Ocorreu um erro na comunicação com o servidor de jogo.' })
+        console.error(`Unhandled error received on WebSocket channel callback. Details: ${JSON.stringify({ channelName, type, msg })}`)
         return
       } else if (type === 'MESSAGE') {
         const parsedMsg: WSGameEventProps = typeof msg === 'string' ? JSON.parse(msg || '{}') : msg
@@ -194,7 +194,7 @@ export default function HomePage() {
           case WS_GAME_EVENTS.BALL_DRAW:
             // forcing context to be 'GAME'
             if (contextRef.current != 'GAME') setContext('GAME')
-            if (isShowingLoadingAlertRef.current && currentGameRef.current?.balls?.length) setIsShowingLoadingAlert(false)
+            if (isShowingLoadingAlertRef.current) setIsShowingLoadingAlert(false)
 
             // eslint-disable-next-line
             const { nextBall } = typeof parsedMsg.data === 'string' ? JSON.parse(parsedMsg.data || '{}') : parsedMsg.data
@@ -224,10 +224,10 @@ export default function HomePage() {
             }
 
             // forcing context to be 'TIMER'
-            if (contextRef.current != 'TIMER') setContext('TIMER')
+            if (contextRef.current != 'TIMER') setTimeout(() => setContext('TIMER'), 2000)
 
             // refetching updated data
-            await _fetchNextGame(true, true)
+            await Promise.all([_fetchCurrentGame(true), _fetchNextGame(true, true)])
             break
 
           case WS_GAME_EVENTS.GAME_FINISH_FAIL:
@@ -270,7 +270,7 @@ export default function HomePage() {
   // TODO: trocar por alert do shadcn
   // winners alert observer
   useEffect(() => {
-    if (isShowingWinnersAlert) showLoading(`VENCEDORES: ${JSON.stringify(currentGame?.winners, null, 2)}`)
+    if (isShowingWinnersAlert && context === 'GAME') showLoading(`VENCEDORES: ${JSON.stringify(currentGame?.winners, null, 2)}`)
     else closeLoading()
 
     isShowingWinnersAlertRef.current = isShowingWinnersAlert
@@ -279,7 +279,7 @@ export default function HomePage() {
   return (
     <div className="flex w-full flex-col items-center justify-center gap-y-4 p-8 relative">
       {/* TODO: remover esse botão */}
-      {context === 'TIMER' && !currentGame && (
+      {import.meta.env.VITE_NODE_ENV === 'development' && context === 'TIMER' && !currentGame && (
         <Button variant="default" className="absolute top-16 left-0" onClick={_handleStartNextGame}>
           Forçar Início
         </Button>
