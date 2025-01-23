@@ -2,12 +2,27 @@
 import { format } from 'date-fns-tz'
 import { parseISO } from 'date-fns'
 
+// constant
+import { DATES_PATTERNS } from '@/constants/dates'
+
+// variables
 export const timeZone = 'America/Brasilia'
 
 export function formatPTBRDateToUSDate(date: string): string | null {
   try {
     const spt = date.split('/')
     return `${spt[2]}-${spt[1]}-${spt[0]}`
+  } catch (err) {
+    console.error(err)
+    return null
+  }
+}
+
+export function formatPTBRDateTimeToUSDateTime(datetime: string): string | null {
+  try {
+    const [date, time] = datetime.split(' ')
+    const spt = date.split('/')
+    return `${spt[2]}-${spt[1]}-${spt[0]} ${time}`
   } catch (err) {
     console.error(err)
     return null
@@ -35,9 +50,7 @@ export function formatUSDateToPTBRDate(date: string): string | null {
   }
 }
 
-export function formatTimestampToPTBRDatetime(
-  timestamp: string,
-): string | null {
+export function formatTimestampToPTBRDatetime(timestamp: string): string | null {
   try {
     if (!timestamp) return '-'
     return timestamp.split('T').join(' ').substring(0, 19)
@@ -59,20 +72,7 @@ export function formatTimestampToUSDatetime(timestamp: string): string | null {
 
 export function formatDateToPTBRDateString(dt: Date): string | null {
   try {
-    const months = [
-      'Janeiro',
-      'Fevereiro',
-      'Março',
-      'Abril',
-      'Maio',
-      'Junho',
-      'Julho',
-      'Agosto',
-      'Setembro',
-      'Outubro',
-      'Novembro',
-      'Dezembro',
-    ]
+    const months = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro']
     const month = months[dt.getMonth()]
     return `${format(dt, 'dd', { timeZone })} de ${month} de ${format(dt, 'yyyy', { timeZone })}`
   } catch (err) {
@@ -83,9 +83,7 @@ export function formatDateToPTBRDateString(dt: Date): string | null {
 
 export function parseDateCategory(date): number {
   if (date.length < 10) return Number(String(date).replace(/\D/g, ''))
-  return Date.parse(
-    `${formatPTBRDateToUSDate(date.substr(0, 10))} ${date.substr(13) || '00'}:00:00`,
-  )
+  return Date.parse(`${formatPTBRDateToUSDate(date.substr(0, 10))} ${date.substr(13) || '00'}:00:00`)
 }
 
 export function formatSpacelessDateToValidDate(spacelessDate: string): string {
@@ -105,17 +103,10 @@ export function formatSpacelessDateToValidDate(spacelessDate: string): string {
     const day = spacelessDate.split(firstPart).join('').slice(0, 2)
     str += ` ${day} `
 
-    str += spacelessDate
-      .split(firstPart)
-      .join('')
-      .slice(2)
-      .split('BRT')
-      .join(' ')
+    str += spacelessDate.split(firstPart).join('').slice(2).split('BRT').join(' ')
     return str
   } catch (err) {
-    console.error(
-      `Unhandled error at dates-util.formatSpacelessDateToValidDate function. Details: ${err}`,
-    )
+    console.error(`Unhandled error at dates-util.formatSpacelessDateToValidDate function. Details: ${err}`)
     return spacelessDate
   }
 }
@@ -145,4 +136,16 @@ export function formatDateToBR(date: Date): string {
   const month = (date.getMonth() + 1).toString().padStart(2, '0')
   const year = date.getFullYear()
   return `${day}/${month}/${year}`
+}
+
+export function formatTimestampToPattern(timestamp: string, pattern: string) {
+  if (!timestamp || !pattern) return timestamp
+
+  switch (pattern) {
+    case DATES_PATTERNS['dd/MM HH:mm'].pattern:
+      return DATES_PATTERNS['dd/MM HH:mm'].regex(timestamp)
+
+    default:
+      return timestamp
+  }
 }

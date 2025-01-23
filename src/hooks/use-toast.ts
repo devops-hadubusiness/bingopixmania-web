@@ -13,6 +13,7 @@ type ToasterToast = ToastProps & {
   title?: React.ReactNode
   description?: React.ReactNode
   action?: ToastActionElement
+  preventAutoDismiss?: boolean
 }
 
 const actionTypes = {
@@ -160,6 +161,8 @@ function toast({ ...props }: Toast) {
       },
     },
   })
+
+  if(!props.preventAutoDismiss) setTimeout(() => dismiss(), 2000)
 
   return {
     id: id,
