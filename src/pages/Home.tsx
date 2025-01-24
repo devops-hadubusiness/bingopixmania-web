@@ -298,7 +298,7 @@ export default function HomePage() {
   useEffect(() => {
     currentGameRef.current = currentGame
     nextGameRef.current = nextGame
-
+console.log(`CURRENT GAME: ${!!currentGameRef.current}`)
     if (!currentGameRef.current) _fetchCurrentGame(false)
   }, [currentGame, nextGame])
 
@@ -319,14 +319,14 @@ export default function HomePage() {
 
   // new winners alert observer
   useEffect(() => {
-    let timeoutId: NodeJS.Timeout | undefined
+    // let timeoutId: NodeJS.Timeout | undefined
 
     isShowingNewWinnersAlertRef.current = isShowingNewWinnersAlert
 
     console.log(`CHAMOU O NEW WINNERS ALERT: ${isShowingNewWinnersAlertRef.current}`) // TODO: REMOVER
-    if (isShowingNewWinnersAlertRef.current) timeoutId = setTimeout(() => setIsShowingNewWinnersAlert(false), 3000)
+    // if (isShowingNewWinnersAlertRef.current) timeoutId = setTimeout(() => setIsShowingNewWinnersAlert(false), 3000)
 
-    return () => clearTimeout(timeoutId)
+    // return () => clearTimeout(timeoutId)
   }, [isShowingNewWinnersAlert])
 
   // closest winners observer
@@ -339,17 +339,18 @@ export default function HomePage() {
     console.log(`ALTEROU O STATUS DO JOGO PARA ${currentGameRef.current?.status} | ${!!isShowingWinnersAlertRef.current} | ${currentGameRef.current?.winners?.length}`) // TODO: remover
 
     if (currentGameRef.current?.status === game_status.FINISHED && !isShowingWinnersAlertRef.current) setIsShowingWinnersAlert(true)
-  }, [currentGameRef.current?.status])
+  }, [currentGame?.status])
 
   // winners alert observer
   useEffect(() => {
-    let timeoutId: NodeJS.Timeout | undefined
+    // let timeoutId: NodeJS.Timeout | undefined
 
     isShowingWinnersAlertRef.current = isShowingWinnersAlert
 
-    if (isShowingWinnersAlertRef.current) timeoutId = setTimeout(() => location.reload(), 5000)
+    console.log(`CHAMOU O WINNERS ALERT: ${isShowingWinnersAlertRef.current} | ${!!currentGameRef.current}`) // TODO: REMOVER
+    // if (isShowingWinnersAlertRef.current) timeoutId = setTimeout(() => location.reload(), 5000)
 
-    return () => clearTimeout(timeoutId)
+    // return () => clearTimeout(timeoutId)
   }, [isShowingWinnersAlert])
 
   return (

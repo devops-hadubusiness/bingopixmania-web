@@ -1,5 +1,5 @@
 // packages
-import { Dispatch, SetStateAction } from 'react'
+import { Dispatch, SetStateAction, useEffect, useState } from 'react'
 import { Trophy } from 'lucide-react'
 
 // components
@@ -26,12 +26,27 @@ type WinnersAlertProps = {
 }
 
 export function WinnersAlert(props: WinnersAlertProps) {
+  const [isOpen, setIsOpen] = useState<boolean>(props.isOpenWinners)
   const firstPrizeWinners = props.winners.filter(w => w.prizeType === winner_prize_type.FIRST)
   const secondPrizeWinners = props.winners.filter(w => w.prizeType === winner_prize_type.SECOND)
   const thirdPrizeWinners = props.winners.filter(w => w.prizeType === winner_prize_type.THIRD)
 
+  useEffect(() => {
+    console.warn(`CHAMOU O WINNERS COMPONENT: ${isOpen}`)
+
+    if (isOpen) {
+      const timeoutId = setTimeout(() => {
+        setIsOpen(false)
+        props.setIsOpenWinners(false)
+        location.reload()
+      }, 5000)
+
+      return () => clearTimeout(timeoutId)
+    }
+  }, [isOpen, props.isOpenWinners])
+
   return (
-    <AlertDialog open={props.isOpenWinners} onOpenChange={props.setIsOpenWinners}>
+    <AlertDialog open={isOpen} onOpenChange={props.setIsOpenWinners}>
       <AlertDialogContent className={`bg-primary/75 rounded-md border-none ${props.className || ''} lg:max-w-screen-lg overflow-y-auto max-h-screen`}>
         <AlertDialogHeader>
           <AlertDialogDescription>

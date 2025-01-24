@@ -1,5 +1,5 @@
 // packages
-import { Dispatch, SetStateAction } from 'react'
+import { Dispatch, SetStateAction, useState, useEffect } from 'react'
 
 // components
 import { AlertDialog, AlertDialogContent, AlertDialogDescription, AlertDialogHeader } from '@/components/ui/alert-dialog'
@@ -24,8 +24,23 @@ type NewWinnersAlertProps = {
 }
 
 export function NewWinnersAlert(props: NewWinnersAlertProps) {
+  const [isOpen, setIsOpen] = useState<boolean>(props.isOpenWinners)
+
+  useEffect(() => {
+    console.warn(`CHAMOU O NEW WINNERS COMPONENT: ${isOpen}`)
+
+    if (isOpen) {
+      const timeoutId = setTimeout(() => {
+        setIsOpen(false)
+        props.setIsOpenWinners(false)
+      }, 3000)
+
+      return () => clearTimeout(timeoutId)
+    }
+  }, [isOpen, props.isOpenWinners])
+
   return (
-    <AlertDialog open={props.isOpenWinners} onOpenChange={props.setIsOpenWinners}>
+    <AlertDialog open={isOpen} onOpenChange={props.setIsOpenWinners}>
       <AlertDialogContent className={`bg-primary/25 rounded-md border-none ${props.className || ''} lg:max-w-screen-lg overflow-y-auto max-h-screen`}>
         <AlertDialogHeader>
           <AlertDialogDescription>
