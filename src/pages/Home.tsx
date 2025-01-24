@@ -103,6 +103,8 @@ export default function HomePage() {
     // refetching only when necessary or forced, to update the currentGame
     if (!refetch && (!!currentGameRef.current || !!nextGameRef.current)) return
 
+    console.warn(`VAI BUSCAR O CURRENT GAME: ${refetch}`)
+
     try {
       setIsLoading(true)
 
@@ -188,6 +190,8 @@ export default function HomePage() {
 
         switch (parsedMsg?.action) {
           case WS_GAME_EVENTS.GAME_STARTED:
+            console.log(`CHAMOU O GAME STARTED`) // TODO: REMOVER
+
             // refetching updated data
             if (!currentGameRef.current) {
               if (!isShowingLoadingAlertRef.current) setIsShowingLoadingAlert(true)
@@ -201,8 +205,12 @@ export default function HomePage() {
             break
 
           case WS_GAME_EVENTS.BALL_DRAW:
+            console.log(`CHAMOU O BALL DRAW`) // TODO: REMOVER
+
             // if hasn't fetched currentGame yet, waits
             if (!currentGameRef.current) {
+              console.log(`ESPERANDO NO BALL DRAW PORQUE NAO ACHOU CURRENT GAME AINDA`) // TODO: RMEOVER
+
               if (!isShowingLoadingAlertRef.current) setIsShowingLoadingAlert(true)
               return
             }
@@ -229,8 +237,10 @@ export default function HomePage() {
             break
 
           case WS_GAME_EVENTS.NEW_WINNERS:
+            console.log(`CHAMOU O NEW WINNERS: ${!!currentGameRef.current} ${currentGameRef.current?.winners?.length}`) // TODO: REMOVER
+
             void ({ winners, closest } = typeof parsedMsg.data === 'string' ? JSON.parse(parsedMsg.data || '{}') : parsedMsg.data)
-            allWinners = [...(currentGameRef.current as GameProps).winners, ...winners]
+            allWinners = [...((currentGameRef.current as GameProps)?.winners || []), ...winners]
             uniqueWinners = Array.from(new Map(allWinners.map(winner => [winner.ticket.id, winner])).values())
 
             if (winners.length) setCurrentGame({ ...(currentGameRef.current as GameProps), winners: uniqueWinners })
@@ -239,8 +249,10 @@ export default function HomePage() {
             break
 
           case WS_GAME_EVENTS.GAME_FINISHED:
+            console.log(`CHAMOU O GAME FINISHED`) // TODO: REMOVER
+
             void ({ winners } = typeof parsedMsg.data === 'string' ? JSON.parse(parsedMsg.data || '{}') : parsedMsg.data)
-            allWinners = [...(currentGameRef.current as GameProps).winners, ...winners]
+            allWinners = [...((currentGameRef.current as GameProps)?.winners || []), ...winners]
             uniqueWinners = Array.from(new Map(allWinners.map(winner => [winner.ticket.id, winner])).values())
 
             setCurrentGame({
@@ -307,13 +319,14 @@ export default function HomePage() {
 
   // new winners alert observer
   useEffect(() => {
-    let timeoutId: NodeJS.Timeout | undefined;
+    let timeoutId: NodeJS.Timeout | undefined
 
     isShowingNewWinnersAlertRef.current = isShowingNewWinnersAlert
 
-    if(isShowingNewWinnersAlertRef.current) timeoutId = setTimeout(() => setIsShowingNewWinnersAlert(false), 3000)
+    console.log(`CHAMOU O NEW WINNERS ALERT: ${isShowingNewWinnersAlertRef.current}`) // TODO: REMOVER
+    if (isShowingNewWinnersAlertRef.current) timeoutId = setTimeout(() => setIsShowingNewWinnersAlert(false), 3000)
 
-    return () => clearTimeout(timeoutId);
+    return () => clearTimeout(timeoutId)
   }, [isShowingNewWinnersAlert])
 
   // closest winners observer
@@ -325,18 +338,18 @@ export default function HomePage() {
   useEffect(() => {
     console.log(`ALTEROU O STATUS DO JOGO PARA ${currentGameRef.current?.status} | ${!!isShowingWinnersAlertRef.current} | ${currentGameRef.current?.winners?.length}`) // TODO: remover
 
-    if (currentGameRef.current?.status === game_status.FINISHED && currentGameRef.current?.winners?.length && !isShowingWinnersAlertRef.current) setIsShowingWinnersAlert(true)
+    if (currentGameRef.current?.status === game_status.FINISHED && !isShowingWinnersAlertRef.current) setIsShowingWinnersAlert(true)
   }, [currentGameRef.current?.status])
 
   // winners alert observer
   useEffect(() => {
-    let timeoutId: NodeJS.Timeout | undefined;
+    let timeoutId: NodeJS.Timeout | undefined
 
     isShowingWinnersAlertRef.current = isShowingWinnersAlert
 
-    if(isShowingWinnersAlertRef.current) timeoutId = setTimeout(() => location.reload(), 5000)
-      
-    return () => clearTimeout(timeoutId);
+    if (isShowingWinnersAlertRef.current) timeoutId = setTimeout(() => location.reload(), 5000)
+
+    return () => clearTimeout(timeoutId)
   }, [isShowingWinnersAlert])
 
   return (
