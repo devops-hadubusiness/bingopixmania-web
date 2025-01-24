@@ -170,7 +170,7 @@ export function HomeGameContext({ parentLoading, game, closest }: HomeGameContex
           <div className="flex flex-col gap-y-0.5 flex-grow h-full">
             {Array.from({ length: 10 }, (_, i) => (
               <div key={i} className="bg-foreground rounded-md px-4 py-1 w-full flex items-center justify-center h-full">
-                <span className="text-xs font-bold text-red-500">{closest?.[i]?.ticket?.id ? String(closest?.[i]?.ticket?.id).padStart(6, '0') : ''}</span>
+                <span className="text-xs font-bold text-primary-text">{closest?.[i]?.ticket?.id ? String(closest?.[i]?.ticket?.id).padStart(6, '0') : ''}</span>
               </div>
             ))}
           </div>
@@ -211,7 +211,7 @@ export function HomeGameContext({ parentLoading, game, closest }: HomeGameContex
         </div>
       </div>
 
-      <GameTicketsSection parentLoading={parentLoading} game={game} />
+      <GameTicketsSection parentLoading={parentLoading} game={game} sort={true} />
     </div>
   )
 }

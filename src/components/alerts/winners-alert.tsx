@@ -1,8 +1,10 @@
 // packages
 import { Dispatch, SetStateAction } from 'react'
+import { Trophy } from 'lucide-react'
 
 // components
 import { AlertDialog, AlertDialogContent, AlertDialogDescription, AlertDialogHeader } from '@/components/ui/alert-dialog'
+import { CustomNoData } from '@/components/data/custom-no-data'
 
 // entities
 import { GameProps } from '@/entities/game/game'
@@ -12,7 +14,6 @@ import { Winner, winner_prize_type } from '@/entities/winner/winner'
 import { cn } from '@/lib/utils'
 
 // utils
-import { getNumberClasses } from '@/utils/games-util'
 import { formatBRL } from '@/utils/currencies-util'
 
 // types
@@ -46,21 +47,25 @@ export function WinnersAlert(props: WinnersAlertProps) {
                   <span className="text-lg text-primary-foreground font-bold">1º PRÊMIO</span>
                 </div>
 
-                {firstPrizeWinners.map((w, i) => (
-                  <div key={i} className={cn('w-full flex bg-primary py-0.5 border-x border-t border-foreground', i == firstPrizeWinners.length - 1 && 'border-b border-x rounded-b-lg')}>
-                    <div className="flex flex-1 items-center justify-end pr-2 border-r border-foreground">
-                      <span className="text-sm text-primary-foreground">{String(w.ticket.id).padStart(6, '0')}</span>
-                    </div>
+                {firstPrizeWinners.length ? (
+                  firstPrizeWinners.map((w, i) => (
+                    <div key={i} className={cn('w-full flex bg-primary py-0.5 border-x border-t border-foreground', i == firstPrizeWinners.length - 1 && 'border-b border-x rounded-b-lg')}>
+                      <div className="flex flex-1 items-center justify-end pr-2 border-r border-foreground">
+                        <span className="text-sm text-primary-foreground">{String(w.ticket.id).padStart(6, '0')}</span>
+                      </div>
 
-                    <div className="flex flex-1 items-center justify-center truncate px-2">
-                      <span className="text-sm text-primary-foreground">{w.user.name}</span>
-                    </div>
+                      <div className="flex flex-1 items-center justify-center truncate px-2">
+                        <span className="text-sm text-primary-foreground">{w.user.name}</span>
+                      </div>
 
-                    <div className="flex flex-1 items-center justify-start pl-2 border-l border-foreground">
-                      <span className="text-sm text-primary-foreground">{formatBRL(w.prizeValue)}</span>
+                      <div className="flex flex-1 items-center justify-start pl-2 border-l border-foreground">
+                        <span className="text-sm text-primary-foreground">{formatBRL(w.prizeValue)}</span>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ))
+                ) : (
+                  <CustomNoData title="Nenhum vencedor encontrado" description="Nenhum jogador venceu o primeiro prêmio." icon={Trophy} iconClass={'size-16'} className="!bg-primary !rounded-none !rounded-b-lg" />
+                )}
               </div>
 
               {/* SECOND PRIZE */}
@@ -70,21 +75,25 @@ export function WinnersAlert(props: WinnersAlertProps) {
                   <span className="text-lg text-primary-foreground font-bold">2º PRÊMIO</span>
                 </div>
 
-                {secondPrizeWinners.map((w, i) => (
-                  <div key={i} className={cn('w-full flex bg-primary py-0.5 border-x border-t border-foreground', i == secondPrizeWinners.length - 1 && 'border-b border-x rounded-b-lg')}>
-                    <div className="flex flex-1 items-center justify-end pr-2 border-r border-foreground">
-                      <span className="text-sm text-primary-foreground">{String(w.ticket.id).padStart(6, '0')}</span>
-                    </div>
+                {secondPrizeWinners.length ? (
+                  secondPrizeWinners.map((w, i) => (
+                    <div key={i} className={cn('w-full flex bg-primary py-0.5 border-x border-t border-foreground', i == secondPrizeWinners.length - 1 && 'border-b border-x rounded-b-lg')}>
+                      <div className="flex flex-1 items-center justify-end pr-2 border-r border-foreground">
+                        <span className="text-sm text-primary-foreground">{String(w.ticket.id).padStart(6, '0')}</span>
+                      </div>
 
-                    <div className="flex flex-1 items-center justify-center truncate px-2">
-                      <span className="text-sm text-primary-foreground">{w.user.name}</span>
-                    </div>
+                      <div className="flex flex-1 items-center justify-center truncate px-2">
+                        <span className="text-sm text-primary-foreground">{w.user.name}</span>
+                      </div>
 
-                    <div className="flex flex-1 items-center justify-start pl-2 border-l border-foreground">
-                      <span className="text-sm text-primary-foreground">{formatBRL(w.prizeValue)}</span>
+                      <div className="flex flex-1 items-center justify-start pl-2 border-l border-foreground">
+                        <span className="text-sm text-primary-foreground">{formatBRL(w.prizeValue)}</span>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ))
+                ) : (
+                  <CustomNoData title="Nenhum vencedor encontrado" description="Nenhum jogador venceu o segundo prêmio." icon={Trophy} iconClass={'size-16'} className="!bg-primary !rounded-none !rounded-b-lg" />
+                )}
               </div>
 
               {/* THIRD PRIZE */}
@@ -94,21 +103,25 @@ export function WinnersAlert(props: WinnersAlertProps) {
                   <span className="text-lg text-primary-foreground font-bold">3º PRÊMIO</span>
                 </div>
 
-                {thirdPrizeWinners.map((w, i) => (
-                  <div key={i} className={cn('w-full flex bg-primary py-0.5 border-x border-t border-foreground', i == thirdPrizeWinners.length - 1 && 'border-b border-x rounded-b-lg')}>
-                    <div className="flex flex-1 items-center justify-end pr-2 border-r border-foreground">
-                      <span className="text-sm text-primary-foreground">{String(w.ticket.id).padStart(6, '0')}</span>
-                    </div>
+                {thirdPrizeWinners.length ? (
+                  thirdPrizeWinners.map((w, i) => (
+                    <div key={i} className={cn('w-full flex bg-primary py-0.5 border-x border-t border-foreground', i == thirdPrizeWinners.length - 1 && 'border-b border-x rounded-b-lg')}>
+                      <div className="flex flex-1 items-center justify-end pr-2 border-r border-foreground">
+                        <span className="text-sm text-primary-foreground">{String(w.ticket.id).padStart(6, '0')}</span>
+                      </div>
 
-                    <div className="flex flex-1 items-center justify-center truncate px-2">
-                      <span className="text-sm text-primary-foreground">{w.user.name}</span>
-                    </div>
+                      <div className="flex flex-1 items-center justify-center truncate px-2">
+                        <span className="text-sm text-primary-foreground">{w.user.name}</span>
+                      </div>
 
-                    <div className="flex flex-1 items-center justify-start pl-2 border-l border-foreground">
-                      <span className="text-sm text-primary-foreground">{formatBRL(w.prizeValue)}</span>
+                      <div className="flex flex-1 items-center justify-start pl-2 border-l border-foreground">
+                        <span className="text-sm text-primary-foreground">{formatBRL(w.prizeValue)}</span>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ))
+                ) : (
+                  <CustomNoData title="Nenhum vencedor encontrado" description="Nenhum jogador venceu o terceiro prêmio." icon={Trophy} iconClass={'size-16'} className="!bg-primary !rounded-none !rounded-b-lg" />
+                )}
               </div>
             </div>
           </AlertDialogDescription>

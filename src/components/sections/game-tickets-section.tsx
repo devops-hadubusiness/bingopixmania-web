@@ -4,6 +4,7 @@ import { useEffect, useState, forwardRef, useImperativeHandle } from 'react'
 // entities
 import { GetUserGameTicketsSchema, TicketProps } from '@/entities/ticket/ticket'
 import { GameProps } from '@/entities/game/game'
+import { winner_prize_type } from '@/entities/winner/winner'
 
 // lib
 import { api } from '@/lib/axios'
@@ -23,15 +24,17 @@ import { formatBRL } from '@/utils/currencies-util'
 import { getNumberClasses } from '@/utils/games-util'
 
 // types
+import { ClosestGameWinnerProps } from '@/types/game-types'
 type HomeNextGameTicketsProps = {
   parentLoading: boolean
   game: GameProps
+  sort?: boolean
 }
 
 // variables
 const loc = `@/components/sections/home-next-game-section`
 
-const GameTicketsSection = forwardRef(({ parentLoading, game }: HomeNextGameTicketsProps, ref) => {
+const GameTicketsSection = forwardRef(({ parentLoading, game, sort }: HomeNextGameTicketsProps, ref) => {
   const { user } = useAuthStore()
   const { toast } = useToast()
   const [isLoading, setIsLoading] = useState<boolean>(parentLoading || true)
@@ -56,6 +59,40 @@ const GameTicketsSection = forwardRef(({ parentLoading, game }: HomeNextGameTick
       toast({ variant: 'destructive', title: 'Ops ...', description: 'Não foi possível buscar suas cartelas do próximo jogo.' })
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  const _getSortedTickets = () => {
+    // checking by third prize award condition
+    if (game.winners.some(w => w.prizeType === winner_prize_type.SECOND)) {
+      return tickets.sort((a, b) => b.numbers.filter(n => game.balls.includes(String(n))).length - a.numbers.filter(n => game.balls.includes(String(n))).length)
+    }
+
+    // checking by first/second prizes awards condition
+    else {
+      const closest: Array<{ ticket: TicketProps; totalMatches: number; maxMatches: number }> = []
+      let matrix: [string[], string[], string[]]
+      let totalMatches = 0
+      let maxMatches = 0
+      let matches: number | undefined
+
+      for (let i = 0; i < tickets.length; i++) {
+        totalMatches = 0 // reseting
+        maxMatches = 0 // reseting
+        matrix = [tickets[i].numbers.slice(0, 5), tickets[i].numbers.slice(5, 10), tickets[i].numbers.slice(10)]
+
+        for (let j = 0; j < matrix.length; j++) {
+          matches = matrix[j]?.filter(c => game.balls.includes(c)).length || 0
+          totalMatches += matches
+
+          // if current matrix has highest matches
+          if (matches > maxMatches) maxMatches = matches
+        }
+
+        closest.push({ ticket: tickets[i], totalMatches, maxMatches })
+      }
+
+      return closest.sort((a, b) => b.maxMatches - a.maxMatches).sort((a, b) => (b.maxMatches === a.maxMatches ? b.totalMatches - a.totalMatches : b.maxMatches - a.maxMatches)).map(c => c.ticket)
     }
   }
 
@@ -88,7 +125,7 @@ const GameTicketsSection = forwardRef(({ parentLoading, game }: HomeNextGameTick
 
       {!!tickets.length && !isLoading && (
         <div className="grid grid-cols-2 gap-2 w-full bg-accent p-2 rounded-lg">
-          {tickets.map((t, i) => (
+          {(sort ? _getSortedTickets() : tickets).map((t, i) => (
             <div key={i} className="col-span-1 flex flex-col border-2 border-primary-text rounded-lg bg-primary/25 rounded-lg">
               <div className="w-full text-center border-b-2 border-primary-text truncate bg-primary/50">
                 <span className="text-xs font-bold">{user?.name || '-'}</span>

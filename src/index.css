@@ -336,4 +336,8 @@ body {
 /* SweetAlert */
 .swal2-container {
   z-index: 999999 !important;
+
+  & * {
+    z-index: 999999 !important;
+  }
 }

@@ -30,13 +30,13 @@ import { HTTP_STATUS_CODE } from '@/constants/http'
 // utils
 import { timeZone } from '@/utils/dates-util'
 
-// variables
-const loc = `@/pages/Deposit`
-
 // types
 type ConfigContextProps = 'CONFIGS' | 'GAMES'
 
-export default function DepositPage() {
+// variables
+const loc = `@/pages/Deposit`
+
+export default function ConfigsPage() {
   const { toast } = useToast()
   const { user } = useAuthStore()
   const {configs, loading: isLoadingConfigs, refetch: refetchConfigs} = useConfigs(user?.ref)

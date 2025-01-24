@@ -13,7 +13,7 @@ import { GameTicketsSection } from '@/components/sections/game-tickets-section'
 // entities
 import { ConfigProps } from '@/entities/config/config'
 import { GameProps } from '@/entities/game/game'
-import { createTicketsSchema, CreateTicketsSchema } from '@/entities/ticket/ticket'
+import { createTicketsSchema, CreateTicketsSchema, TicketProps } from '@/entities/ticket/ticket'
 
 // lib
 import { api } from '@/lib/axios'
@@ -36,19 +36,20 @@ type BuyTicketsFormProps = {
   parentLoading: boolean
   configs?: ConfigProps
   game: GameProps
+  onBoughtTickets?: (boughtTickets: TicketProps[]) => void
 }
 type OperationTypeProps = 'ADDITION' | 'SUBTRACTION' | 'REPLACE'
 
 // variables
 const loc = `@/components/forms/buy-tickets-form`
 
-export function BuyTicketsForm({ parentLoading, configs, game }: BuyTicketsFormProps) {
+export function BuyTicketsForm({ parentLoading, configs, game, onBoughtTickets }: BuyTicketsFormProps) {
   const { user, udpateUserBalance } = useAuthStore()
   const { toast } = useToast()
   const homeNextGameTicketsSectionRef = useRef(null)
   const [isLoading, setIsLoading] = useState<boolean>(parentLoading || true)
   const ticketPrice = Number(game.ticketPrice || configs?.defaultTicketPrice)
-
+  
   const form = useForm<CreateTicketsSchema>({
     resolver: zodResolver(createTicketsSchema),
     defaultValues: {
@@ -79,6 +80,7 @@ export function BuyTicketsForm({ parentLoading, configs, game }: BuyTicketsFormP
         udpateUserBalance(response.data.body[0].balance)
         form.reset()
         if (homeNextGameTicketsSectionRef.current) await homeNextGameTicketsSectionRef.current.fetchUserNextGameTickets()
+        if (onBoughtTickets) onBoughtTickets(response.data.body[0].tickets)
       } else toast({ variant: 'destructive', title: 'Ops ...', description: response.data?.statusMessage || 'Não foi possível comprar as cartelas.' })
     } catch (err) {
       console.error(`Unhandled rejection at ${loc}._buyTickets function. Details: ${err}`)

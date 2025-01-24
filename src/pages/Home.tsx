@@ -17,7 +17,6 @@ import { Winner } from '@/entities/winner/winner'
 
 // hooks
 import { useConfigs } from '@/hooks/use-configs'
-import { useWaitForStateUpdate } from '@/hooks/use-wait-for-state-update'
 
 // contexts
 import { useWebSocket } from '@/contexts/WebSocketContext'
@@ -53,8 +52,6 @@ export default function HomePage() {
 
   const { ws, wsChannel, setChannel } = useWebSocket()
   const wsChannelRef = useRef<RealtimeChannel | null>(wsChannel)
-  const waitForWsConnectionStateUpdate = useWaitForStateUpdate(ws?.connection?.state)
-  const waitForWsChannelStateUpdate = useWaitForStateUpdate(wsChannel?.state)
 
   const [context, setContext] = useState<ContextProps>('TIMER')
   const contextRef = useRef<ContextProps>(context)
@@ -65,44 +62,7 @@ export default function HomePage() {
   const [nextGame, setNextGame] = useState<GameProps | undefined>()
   const nextGameRef = useRef<GameProps | undefined>(nextGame)
 
-  const [newWinners, setNewWinners] = useState<Winner[]>([
-    /* {
-      prizeType: winner_prize_type.FIRST,
-      prizeValue: 10,
-      ticket: { id: 1, numbers: Array.from({ length: 15 }, (_, i) => String(i + 1)) },
-      user: { name: 'Gustavo' }
-    }, */
-    /* {
-      prizeType: winner_prize_type.FIRST,
-      prizeValue: 5,
-      ticket: { id: 1, numbers: Array.from({ length: 15 }, (_, i) => String(i + 1)) },
-      user: { name: 'Gustavo' }
-    },
-    {
-      prizeType: winner_prize_type.FIRST,
-      prizeValue: 5,
-      ticket: { id: 2, numbers: Array.from({ length: 5 }, (_, i) => String(i + 1)).concat(Array.from({ length: 10 }, (_, i) => String(i + 15 + 1))) },
-      user: { name: 'Edu' }
-    }, */
-    /* {
-      prizeType: winner_prize_type.SECOND,
-      prizeValue: 20,
-      ticket: { id: 1, numbers: Array.from({ length: 15 }, (_, i) => String(i + 1)) },
-      user: { name: 'Gustavo' }
-    } */
-    /* {
-      prizeType: winner_prize_type.SECOND,
-      prizeValue: 10,
-      ticket: { id: 1, numbers: Array.from({ length: 15 }, (_, i) => String(i + 1)) },
-      user: { name: 'Gustavo' }
-    },
-    {
-      prizeType: winner_prize_type.SECOND,
-      prizeValue: 10,
-      ticket: { id: 2, numbers: Array.from({ length: 5 }, (_, i) => String(i + 1)).concat(Array.from({ length: 10 }, (_, i) => String(i + 15 + 1))) },
-      user: { name: 'Edu' }
-    }, */
-  ])
+  const [newWinners, setNewWinners] = useState<Winner[]>([])
   const newWinnersRef = useRef<Winner[]>(newWinners)
 
   const [closestWinners, setClosestWinners] = useState<ClosestGameWinnerProps[]>([])
@@ -114,7 +74,7 @@ export default function HomePage() {
   const [isShowingNewWinnersAlert, setIsShowingNewWinnersAlert] = useState<boolean>(false)
   const isShowingNewWinnersAlertRef = useRef<boolean>(isShowingNewWinnersAlert)
 
-  const [isShowingWinnersAlert, setIsShowingWinnersAlert] = useState<boolean>(false) // TODO: voltar para false
+  const [isShowingWinnersAlert, setIsShowingWinnersAlert] = useState<boolean>(false)
   const isShowingWinnersAlertRef = useRef<boolean>(isShowingWinnersAlert)
 
   // TODO: remover
@@ -123,20 +83,12 @@ export default function HomePage() {
       setIsLoading(true)
       setIsShowingLoadingAlert(true)
 
-      // TODO: testando sem esperar dar o attach (na mao com banco vazio)
-      // waiting for ws placeholder event channel to be attached before call the api
-      // console.log('Waiting for ws channel to be attached ...')
-      // if (!currentGame && !nextGame && wsChannel?.state != 'attached') await waitForWsChannelStateUpdate('attached')
-      // console.log('Ws channel attached!')
-
-      console.warn(`STARTING NEXT GAME: ${currentGameRef.current} ${nextGameRef.current}`)
       const response = await api.post(`/start-next-game`)
 
       if (response.data?.statusCode === HTTP_STATUS_CODE.OK) {
         if (isShowingLoadingAlertRef.current) setIsShowingLoadingAlert(false)
 
         // only refetching currentGame for update the data, if the next game isn't exists. If it exists, the currentGame will be updated by the GAME_STARTED event
-        console.warn(`AFTER STARTED NEXT GAME: ${currentGameRef.current} ${nextGameRef.current}`)
         if (!currentGameRef.current && !nextGameRef.current) await _fetchCurrentGame(true)
       } else toast({ variant: 'destructive', title: 'Ops ...', description: 'Não foi possível iniciar o jogo.' })
     } catch (err) {
@@ -150,7 +102,6 @@ export default function HomePage() {
   const _fetchCurrentGame = async (refetch: boolean) => {
     // refetching only when necessary or forced, to update the currentGame
     if (!refetch && (!!currentGameRef.current || !!nextGameRef.current)) return
-    else console.log(`VAI BUSCAR O CURRENT GAME: ${refetch} ${!!currentGameRef.current} ${!!nextGameRef.current}`)
 
     try {
       setIsLoading(true)
@@ -162,8 +113,6 @@ export default function HomePage() {
         }
       })
 
-      console.log(response.data) // TODO: remover
-
       if ([HTTP_STATUS_CODE.OK, HTTP_STATUS_CODE.NOT_FOUND].includes(response.data?.statusCode)) {
         setCurrentGame(response.data.body?.[0])
 
@@ -172,7 +121,6 @@ export default function HomePage() {
           if (contextRef.current != 'GAME') setContext('GAME')
 
           // assigning to ws current-game event channel only if hasn't next game
-          console.warn(`NOME DO WS NO MOMENTO: ${wsChannelRef.current?.name} | EXISTE CURRENT ? ${!!currentGameRef.current} | EXISTE NEXT ? ${!!nextGameRef.current}`)
           if (!nextGameRef.current) await _assignWSChannelEvents(`${baseWsChannelName}-${response.data.body[0].ref}`)
         } else await _fetchNextGame(refetch)
       } else {
@@ -189,7 +137,6 @@ export default function HomePage() {
   const _fetchNextGame = async (refetch: boolean) => {
     // refetching only when necessary or forced, to update the nextGame
     if (!refetch && (currentGameRef.current || nextGameRef.current)) return
-    else console.log(`VAI BUSCAR O NEXT GAME: ${refetch} ${!!currentGameRef.current} ${!!nextGameRef.current}`)
 
     try {
       setIsLoading(true)
@@ -200,8 +147,6 @@ export default function HomePage() {
           userRef: user?.ref
         }
       })
-
-      console.log(response.data) // TODO: remover
 
       if (response.data?.statusCode === HTTP_STATUS_CODE.OK) {
         setNextGame(response.data.body[0])
@@ -226,9 +171,7 @@ export default function HomePage() {
   }
 
   const _assignWSChannelEvents = async (channelName: string) => {
-    console.log('ATRIBUÍNDO EVENTOS AO CANAL: ', channelName) // TODO: remover
     setChannel({ channelName, cb: _channelCb })
-    console.log('EVENTOS ATRIBUÍDOS COM SUCESSO AO CANAL: ', channelName) // TODO: remover
   }
 
   const _channelCb = async (channelName: string, type: WSChannelMessageTypeProps, msg: string) => {
@@ -245,8 +188,6 @@ export default function HomePage() {
 
         switch (parsedMsg?.action) {
           case WS_GAME_EVENTS.GAME_STARTED:
-            console.log('CHAMOU O EVENT_STARTED') // TODO: remover
-
             // refetching updated data
             if (!currentGameRef.current) {
               if (!isShowingLoadingAlertRef.current) setIsShowingLoadingAlert(true)
@@ -260,8 +201,6 @@ export default function HomePage() {
             break
 
           case WS_GAME_EVENTS.BALL_DRAW:
-            console.log('CHAMOU O BALL_DRAW') // TODO: remover
-
             // if hasn't fetched currentGame yet, waits
             if (!currentGameRef.current) {
               if (!isShowingLoadingAlertRef.current) setIsShowingLoadingAlert(true)
@@ -290,51 +229,25 @@ export default function HomePage() {
             break
 
           case WS_GAME_EVENTS.NEW_WINNERS:
-            console.log(`CHAMOU O NEW WINNERS`) // TODO: remover
-
             void ({ winners, closest } = typeof parsedMsg.data === 'string' ? JSON.parse(parsedMsg.data || '{}') : parsedMsg.data)
             allWinners = [...(currentGameRef.current as GameProps).winners, ...winners]
             uniqueWinners = Array.from(new Map(allWinners.map(winner => [winner.ticket.id, winner])).values())
-            console.log(`WINNERS: ${winners}`) // TODO: remover
-            console.log(`FILTERED WINNERS: ${uniqueWinners}`) // TODO: remover
-            console.log(`ALL WINNERS: ${allWinners}`) // TODO: remover
-            console.log(`CLOSEST: ${closest}`) // TODO: remover
 
-            setCurrentGame({ ...(currentGameRef.current as GameProps), winners: uniqueWinners })
+            if (winners.length) setCurrentGame({ ...(currentGameRef.current as GameProps), winners: uniqueWinners })
             setNewWinners(winners || [])
             setClosestWinners(closest || [])
             break
 
           case WS_GAME_EVENTS.GAME_FINISHED:
-            console.log(`CHAMOU O GAME FINISHED`) // TODO: remover
-
             void ({ winners } = typeof parsedMsg.data === 'string' ? JSON.parse(parsedMsg.data || '{}') : parsedMsg.data)
             allWinners = [...(currentGameRef.current as GameProps).winners, ...winners]
             uniqueWinners = Array.from(new Map(allWinners.map(winner => [winner.ticket.id, winner])).values())
-            console.log(`WINNERS: ${winners}`) // TODO: remover
-            console.log(`FILTERED WINNERS: ${uniqueWinners}`) // TODO: remover
-            console.log(`ALL WINNERS: ${allWinners}`) // TODO: remover
 
-            setCurrentGame({ ...(currentGameRef.current as GameProps), winners: uniqueWinners })
-
-            // TODO: voltar o certo
-            // forcing context to be 'TIMER'
-            // if (contextRef.current != 'TIMER') setTimeout(() => setContext('TIMER'), 2000)
-            // if (contextRef.current != 'TIMER') setContext('TIMER')
-            // // refetching updated data
-            // await _fetchCurrentGame(true)
-
-            if (!isShowingWinnersAlertRef.current) {
-              setIsShowingWinnersAlert(true)
-
-              setTimeout(async () => {
-                location.reload()
-                // setIsShowingWinnersAlert(false)
-
-                // // refetching updated data
-                // await _fetchCurrentGame(true)
-              }, 3000)
-            }
+            setCurrentGame({
+              ...(currentGameRef.current as GameProps),
+              status: game_status.FINISHED,
+              winners: uniqueWinners
+            })
             break
 
           case WS_GAME_EVENTS.GAME_FINISH_FAIL:
@@ -374,93 +287,57 @@ export default function HomePage() {
     currentGameRef.current = currentGame
     nextGameRef.current = nextGame
 
-    // TODO: descomentar
-    if (!currentGameRef.current) {
-      console.log(`TRIGGOU USE EFFECT: ${!!currentGameRef.current} ${!!nextGameRef.current}`)
-      _fetchCurrentGame(false)
-    }
-
-    // TODO: remover
-    // currentGameRef.current = { balls: Array.from({ length: 4 }, (_, i) => String(i + 1)), status: game_status.RUNNING }
-    // currentGameRef.current = { balls: Array.from({ length: 5 }, (_, i) => String(i + 1)), status: game_status.RUNNING }
-    /* currentGameRef.current = {
-      balls: Array.from({ length: 30 }, (_, i) => String(i + 1)),
-      status: game_status.RUNNING,
-      winners: [
-        {
-          prizeType: winner_prize_type.FIRST,
-          prizeValue: 5,
-          ticket: { id: 1, numbers: Array.from({ length: 5 }, (_, i) => String(i + 1)) },
-          user: { name: 'Gustavo' }
-        },
-        {
-          prizeType: winner_prize_type.FIRST,
-          prizeValue: 5,
-          ticket: { id: 2, numbers: Array.from({ length: 5 }, (_, i) => String(i + 1)) },
-          user: { name: 'Edu' }
-        },
-        {
-          prizeType: winner_prize_type.SECOND,
-          prizeValue: 10,
-          ticket: { id: 1, numbers: Array.from({ length: 15 }, (_, i) => String(i + 1)) },
-          user: { name: 'Gustavo' }
-        },
-        {
-          prizeType: winner_prize_type.SECOND,
-          prizeValue: 10,
-          ticket: { id: 2, numbers: Array.from({ length: 15 }, (_, i) => String(i + 1)) },
-          user: { name: 'Edu' }
-        },
-        {
-          prizeType: winner_prize_type.THIRD,
-          prizeValue: 15,
-          ticket: { id: 1, numbers: Array.from({ length: 30 }, (_, i) => String(i + 1)) },
-          user: { name: 'Gustavo' }
-        },
-        {
-          prizeType: winner_prize_type.THIRD,
-          prizeValue: 15,
-          ticket: { id: 2, numbers: Array.from({ length: 30 }, (_, i) => String(i + 1)) },
-          user: { name: 'Edu' }
-        }
-      ]
-    } */
+    if (!currentGameRef.current) _fetchCurrentGame(false)
   }, [currentGame, nextGame])
 
   // loading alert observer
   useEffect(() => {
-    if (isShowingLoadingAlert) showLoading('Conectando ao servidor de jogo ...')
-    else closeLoading()
-
     isShowingLoadingAlertRef.current = isShowingLoadingAlert
+
+    if (isShowingLoadingAlertRef.current) showLoading('Conectando ao servidor de jogo ...')
+    else closeLoading()
   }, [isShowingLoadingAlert])
-
-  // new winners alert observer
-  useEffect(() => {
-    isShowingNewWinnersAlertRef.current = isShowingNewWinnersAlert
-  }, [isShowingNewWinnersAlert])
-
-  // winners alert observer
-  useEffect(() => {
-    isShowingWinnersAlertRef.current = isShowingWinnersAlert
-  }, [isShowingWinnersAlert])
 
   // new winners observer
   useEffect(() => {
     newWinnersRef.current = newWinners
 
-    if (newWinnersRef.current?.length) {
-      setIsShowingNewWinnersAlert(true)
-      setTimeout(() => setIsShowingNewWinnersAlert(false), 1500) // TODO: descomentar
-    } else {
-      if (isShowingNewWinnersAlertRef.current) setIsShowingNewWinnersAlert(false)
-    }
+    if (newWinnersRef.current?.length) setIsShowingNewWinnersAlert(true)
   }, [newWinners])
+
+  // new winners alert observer
+  useEffect(() => {
+    let timeoutId: NodeJS.Timeout | undefined;
+
+    isShowingNewWinnersAlertRef.current = isShowingNewWinnersAlert
+
+    if(isShowingNewWinnersAlertRef.current) timeoutId = setTimeout(() => setIsShowingNewWinnersAlert(false), 3000)
+
+    return () => clearTimeout(timeoutId);
+  }, [isShowingNewWinnersAlert])
 
   // closest winners observer
   useEffect(() => {
     closestWinnersRef.current = closestWinners
   }, [closestWinners])
+
+  // current game status observer
+  useEffect(() => {
+    console.log(`ALTEROU O STATUS DO JOGO PARA ${currentGameRef.current?.status} | ${!!isShowingWinnersAlertRef.current} | ${currentGameRef.current?.winners?.length}`) // TODO: remover
+
+    if (currentGameRef.current?.status === game_status.FINISHED && currentGameRef.current?.winners?.length && !isShowingWinnersAlertRef.current) setIsShowingWinnersAlert(true)
+  }, [currentGameRef.current?.status])
+
+  // winners alert observer
+  useEffect(() => {
+    let timeoutId: NodeJS.Timeout | undefined;
+
+    isShowingWinnersAlertRef.current = isShowingWinnersAlert
+
+    if(isShowingWinnersAlertRef.current) timeoutId = setTimeout(() => location.reload(), 5000)
+      
+    return () => clearTimeout(timeoutId);
+  }, [isShowingWinnersAlert])
 
   return (
     <div className="flex w-full flex-col items-center justify-center gap-y-4 p-8 relative">

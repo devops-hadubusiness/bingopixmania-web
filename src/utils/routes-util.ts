@@ -13,14 +13,14 @@ import NotFound from '@/pages/NotFound'
 import Login from '@/pages/Login'
 import Home from '@/pages/Home'
 import Configs from '@/pages/Configs'
-import Turns from '@/pages/Turns'
+import Games from '@/pages/Games'
 import Deposit from '@/pages/Deposit'
 import Prizes from '@/pages/Prizes'
 import Deposits from '@/pages/Deposits'
 import Receipts from '@/pages/Receipts'
 import Indications from '@/pages/Indications'
 import Help from '@/pages/Help'
-import SpecialTurns from '@/pages/SpecialTurns'
+import SpecialGames from '@/pages/SpecialGames'
 
 // store
 import { useAuthStore } from '@/store/auth'
@@ -106,7 +106,7 @@ export const routes: RouteProps[] = [
     icon: List,
     description: ``,
     category: 'page',
-    component: Turns,
+    component: Games,
     roles: Object.keys(user_role),
     disabled: () => false,
     showOnHome: () => true,
@@ -189,7 +189,7 @@ export const routes: RouteProps[] = [
     group: 'Jogos',
     icon: Flame,
     category: 'page',
-    component: SpecialTurns,
+    component: SpecialGames,
     roles: Object.keys(user_role),
     highlight: true,
     button: true,
