@@ -1,65 +1,32 @@
 // packages
-import { forwardRef, useImperativeHandle } from 'react'
 import { ColumnDef } from '@tanstack/react-table'
 import { format } from 'date-fns-tz'
 
 // components
 import { Avatar, AvatarImage } from '@/components/ui/avatar'
-import { CustomDataTable } from '@/components/table/custom-data-table'
 import { GameTicketsSection } from '@/components/sections/game-tickets-section'
 
 // entities
 import { GameProps } from '@/entities/game/game'
-import { WinnerProps, winner_prize_type } from '@/entities/winner/winner'
+import { winner_prize_type } from '@/entities/winner/winner'
 
 // utils
 import { formatBRL } from '@/utils/currencies-util'
-import { timeZone } from '@/utils/dates-util'
+import { timeZone, formatTimestampToPattern } from '@/utils/dates-util'
 import { getNumberClasses } from '@/utils/games-util'
 
 // lib
 import { cn } from '@/lib/utils'
 
 // types
+import {ClosestGameWinnerProps} from '@/types/game-types'
 type HomeGameContextProps = {
   parentLoading: boolean
   game: GameProps
+  closest: ClosestGameWinnerProps[]
 }
 
-export function HomeGameContext({ parentLoading, game }: HomeGameContextProps) {
-  const columns: ColumnDef<any>[] = [
-    {
-      accessorKey: 'coupon',
-      header: 'CUPOM',
-      cell: ({ row }) => <div>{Math.floor(Math.random() * (999999 - 100000 + 1)) + 100000}</div>
-    },
-    {
-      accessorKey: 'donater',
-      header: 'DOADOR',
-      cell: ({ row }) => <div>Francisca</div>
-    },
-    {
-      accessorKey: 'remaining',
-      header: 'FALTAM',
-      cell: ({ row }) => (
-        <div className="flex gap-x-1">
-          <div className="flex items-center justify-center p-2 rounded-md bg-primary">
-            <span className="font-bold text-sm text-primary-foreground">{Math.floor(Math.random() * (99 - 1 + 1)) + 1}</span>
-          </div>
-          <div className="flex items-center justify-center p-2 rounded-md bg-primary">
-            <span className="font-bold text-sm text-primary-foreground">{Math.floor(Math.random() * (99 - 1 + 1)) + 1}</span>
-          </div>
-          <div className="flex items-center justify-center p-2 rounded-md bg-primary">
-            <span className="font-bold text-sm text-primary-foreground">{Math.floor(Math.random() * (99 - 1 + 1)) + 1}</span>
-          </div>
-          <div className="flex items-center justify-center p-2 rounded-md bg-muted">
-            <span className="font-bold text-sm text-accent">&nbsp;</span>
-          </div>
-        </div>
-      )
-    }
-  ]
-
+export function HomeGameContext({ parentLoading, game, closest }: HomeGameContextProps) {
   const _hasWinner = (prizeType: winner_prize_type) => {
     return game.winners?.some(w => w.prizeType === prizeType)
   }
@@ -73,12 +40,12 @@ export function HomeGameContext({ parentLoading, game }: HomeGameContextProps) {
           <span className={cn('text-primary-foreground rounded-lg text-xs', (parentLoading || !game?.firstPrizeValue) && 'skeleton')}>{formatBRL(game.firstPrizeValue)}</span>
         </div>
 
-        <div className={cn('flex flex-col items-center justify-center gap-y-2 rounded-md p-2 w-1/3', _hasWinner(winner_prize_type.FIRST) && !_hasWinner(winner_prize_type.SECOND) ? 'bg-primary/50' : 'bg-accent')}>
+        <div className={cn('flex flex-col items-center justify-center gap-y-2 rounded-md p-2 w-1/3', _hasWinner(winner_prize_type.FIRST) && !_hasWinner(winner_prize_type.SECOND) ? 'bg-primary/50 border border-primary-text' : 'bg-accent')}>
           <span className={cn('w-full text-center text-primary-foreground rounded-lg text-xs font-bold', _hasWinner(winner_prize_type.FIRST) && !_hasWinner(winner_prize_type.SECOND) && 'bg-primary-text')}>Prêmio 2</span>
           <span className={cn('text-primary-foreground rounded-lg text-xs', (parentLoading || !game?.secondPrizeValue) && 'skeleton')}>{formatBRL(game.secondPrizeValue)}</span>
         </div>
 
-        <div className={cn('flex flex-col items-center justify-center gap-y-2 rounded-md p-2 w-1/3', _hasWinner(winner_prize_type.FIRST) && _hasWinner(winner_prize_type.SECOND) ? 'bg-primary/50' : 'bg-accent')}>
+        <div className={cn('flex flex-col items-center justify-center gap-y-2 rounded-md p-2 w-1/3', _hasWinner(winner_prize_type.FIRST) && _hasWinner(winner_prize_type.SECOND) ? 'bg-primary/50 border border-primary-text' : 'bg-accent')}>
           <span className={cn('w-full text-center text-primary-foreground rounded-lg text-xs font-bold', _hasWinner(winner_prize_type.FIRST) && _hasWinner(winner_prize_type.SECOND) && 'bg-primary-text')}>Prêmio 3</span>
           <span className={cn('text-primary-foreground rounded-lg text-xs', (parentLoading || !game?.thirdPrizeValue) && 'skeleton')}>{formatBRL(game.thirdPrizeValue)}</span>
         </div>
@@ -101,13 +68,13 @@ export function HomeGameContext({ parentLoading, game }: HomeGameContextProps) {
           {/* TODO: ver se está certo a data do jogo */}
           <div className="w-full flex flex-col items-center justify-center gap-y-2 rounded-md border border-primary-text p-2 bg-primary/50">
             <span className="w-full text-center bg-primary-text text-primary-foreground rounded-lg text-xs font-bold">Data</span>
-            <span className={cn('text-primary-foreground rounded-lg text-xs', (parentLoading || !game?.dateTime) && 'skeleton')}>{format(new Date(game.dateTime), 'dd/MM/yyyy', { timeZone })}</span>
+            <span className={cn('text-primary-foreground rounded-lg text-xs', (parentLoading || !game?.dateTime) && 'skeleton')}>{formatTimestampToPattern(game.dateTime, 'dd/MM/yyyy')}</span>
           </div>
 
           {/* TODO: ver se está certo a hora do jogo */}
           <div className="w-full flex flex-col items-center justify-center gap-y-2 rounded-md border border-primary-text p-2 bg-primary/50">
             <span className="w-full text-center bg-primary-text text-primary-foreground rounded-lg text-xs font-bold">Hora</span>
-            <span className={cn('text-primary-foreground rounded-lg text-xs', (parentLoading || !game?.dateTime) && 'skeleton')}>{format(new Date(game.dateTime), 'HH:mm:ss', { timeZone })}</span>
+            <span className={cn('text-primary-foreground rounded-lg text-xs', (parentLoading || !game?.dateTime) && 'skeleton')}>{formatTimestampToPattern(game.dateTime, 'HH:mm:ss')}</span>
           </div>
         </div>
 
@@ -194,7 +161,7 @@ export function HomeGameContext({ parentLoading, game }: HomeGameContextProps) {
       <div className="w-full bg-primary rounded-lg p-1 flex flex-wrap">
         {/* <CustomDataTable columns={columns} data={new Array(8).fill(' ')} hideFilterInput={true} /> */}
         <div className="flex w-full">
-          <span className="w-3/12 text-center font-bold text-sm text-primary-foreground">CUPOM</span>
+          <span className="w-3/12 text-center font-bold text-sm text-primary-foreground">CARTELA</span>
           <span className="w-4/12 text-center font-bold text-sm text-primary-foreground">DOADOR</span>
           <span className="w-5/12 text-center font-bold text-sm text-primary-foreground">FALTAM</span>
         </div>
@@ -203,7 +170,7 @@ export function HomeGameContext({ parentLoading, game }: HomeGameContextProps) {
           <div className="flex flex-col gap-y-0.5 flex-grow h-full">
             {Array.from({ length: 10 }, (_, i) => (
               <div key={i} className="bg-foreground rounded-md px-4 py-1 w-full flex items-center justify-center h-full">
-                <span className="text-xs font-bold text-red-500">{Math.floor(Math.random() * (999999 - 100000 + 1)) + 100000}</span>
+                <span className="text-xs font-bold text-red-500">{closest?.[i]?.ticket?.id ? String(closest?.[i]?.ticket?.id).padStart(6, '0') : ''}</span>
               </div>
             ))}
           </div>
@@ -211,7 +178,7 @@ export function HomeGameContext({ parentLoading, game }: HomeGameContextProps) {
           <div className="flex flex-col gap-y-0.5 flex-grow h-full">
             {Array.from({ length: 10 }, (_, i) => (
               <div key={i + 10} className="bg-foreground rounded-md px-4 py-1 w-full flex items-center justify-center h-full">
-                <span className="text-xs font-bold text-background">Francisca Maria</span>
+                <span className="text-xs font-bold text-background">{closest?.[i]?.ticket?.user?.name || '\u00A0'}</span>
               </div>
             ))}
           </div>
@@ -219,24 +186,24 @@ export function HomeGameContext({ parentLoading, game }: HomeGameContextProps) {
           <div className="flex flex-col gap-y-0.5 w-5/12 h-full">
             {Array.from({ length: 10 }, (_, i) => (
               <div key={i + 20} className="flex gap-x-1">
-                <div className="flex items-center justify-center p-2 rounded-md bg-primary-text w-[20%]">
-                  <span className="font-bold text-xs text-primary-foreground">{Math.floor(Math.random() * (99 - 1 + 1)) + 1}</span>
+                <div className={cn("flex items-center justify-center p-2 rounded-md w-[20%]", closest?.[i]?.remainingNumbers?.at(0) ? 'bg-primary-text text-primary-foreground' : 'bg-muted-foreground text-accent')}>
+                  <span className="font-bold text-xs">{closest?.[i]?.remainingNumbers?.at(0) || '\u00A0'}</span>
                 </div>
 
-                <div className="flex items-center justify-center p-2 rounded-md bg-primary-text w-[20%]">
-                  <span className="font-bold text-xs text-primary-foreground">{Math.floor(Math.random() * (99 - 1 + 1)) + 1}</span>
+                <div className={cn("flex items-center justify-center p-2 rounded-md w-[20%]", closest?.[i]?.remainingNumbers?.at(1) ? 'bg-primary-text text-primary-foreground' : 'bg-muted-foreground text-accent')}>
+                  <span className="font-bold text-xs">{closest?.[i]?.remainingNumbers?.at(1) || '\u00A0'}</span>
                 </div>
 
-                <div className="flex items-center justify-center p-2 rounded-md bg-primary-text w-[20%]">
-                  <span className="font-bold text-xs text-primary-foreground">{Math.floor(Math.random() * (99 - 1 + 1)) + 1}</span>
+                <div className={cn("flex items-center justify-center p-2 rounded-md w-[20%]", closest?.[i]?.remainingNumbers?.at(2) ? 'bg-primary-text text-primary-foreground' : 'bg-muted-foreground text-accent')}>
+                  <span className="font-bold text-xs">{closest?.[i]?.remainingNumbers?.at(2) || '\u00A0'}</span>
                 </div>
 
-                <div className="flex items-center justify-center p-2 rounded-md bg-muted-foreground w-[20%]">
-                  <span className="font-bold text-xs text-accent">&nbsp;</span>
+                <div className={cn("flex items-center justify-center p-2 rounded-md w-[20%]", closest?.[i]?.remainingNumbers?.at(3) ? 'bg-primary-text text-primary-foreground' : 'bg-muted-foreground text-accent')}>
+                  <span className="font-bold text-xs">{closest?.[i]?.remainingNumbers?.at(3) || '\u00A0'}</span>
                 </div>
 
-                <div className="flex items-center justify-center p-2 rounded-md bg-muted-foreground w-[20%]">
-                  <span className="font-bold text-xs text-accent">&nbsp;</span>
+                <div className={cn("flex items-center justify-center p-2 rounded-md w-[20%]", closest?.[i]?.remainingNumbers?.at(4) ? 'bg-primary-text text-primary-foreground' : 'bg-muted-foreground text-accent')}>
+                  <span className="font-bold text-xs">{closest?.[i]?.remainingNumbers?.at(4) || '\u00A0'}</span>
                 </div>
               </div>
             ))}

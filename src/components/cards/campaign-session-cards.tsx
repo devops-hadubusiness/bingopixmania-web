@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import { LuQrCode } from "react-icons/lu";
 
 // components
-import { ConfirmationAlert } from "@/components/alerts/confirmation-alert";
+import { ConfirmationAlert } from "@/components/alerts/winners-alert";
 import { CustomNoData } from "@/components/data/custom-no-data";
 import { CampaignSessionCard } from "@/components/cards/campaign-session-card";
 import { Skeleton } from "@/components/ui/skeleton";

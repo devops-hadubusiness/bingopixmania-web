@@ -40,6 +40,8 @@ export type WinnerProps = {
   prizeType: winner_prize_type
   prizeValue: number
   withdrawalStatus: winner_prize_withdrawal_status
+  createdAt: Date
+  updatedAt?: Date
 
   // relationships
   user: User
@@ -82,6 +84,14 @@ export class Winner {
 
   get withdrawalStatus() {
     return this.props.withdrawalStatus
+  }
+
+  get createdAt() {
+    return this.props.createdAt
+  }
+
+  get updatedAt() {
+    return this.props.updatedAt
   }
 
   get user() {

@@ -141,11 +141,5 @@ export function formatDateToBR(date: Date): string {
 export function formatTimestampToPattern(timestamp: string, pattern: string) {
   if (!timestamp || !pattern) return timestamp
 
-  switch (pattern) {
-    case DATES_PATTERNS['dd/MM HH:mm'].pattern:
-      return DATES_PATTERNS['dd/MM HH:mm'].regex(timestamp)
-
-    default:
-      return timestamp
-  }
+  return DATES_PATTERNS[pattern]?.(timestamp)
 }

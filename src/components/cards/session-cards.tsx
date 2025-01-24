@@ -3,7 +3,7 @@ import { useState, useEffect, forwardRef, useImperativeHandle, useCallback } fro
 import { QrCode } from "lucide-react";
 
 // components
-import { ConfirmationAlert } from "@/components/alerts/confirmation-alert";
+import { ConfirmationAlert } from "@/components/alerts/winners-alert";
 import { CustomNoData } from "@/components/data/custom-no-data";
 import { SessionCard } from "@/components/cards/session-card";
 import { Skeleton } from "@/components/ui/skeleton";
